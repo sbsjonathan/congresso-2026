@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#833500">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>A Sentinela</title>
+
+    <meta name="color-scheme" content="light dark">
+    <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('tema-interface') || 'system';
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = savedTheme === 'dark' || (savedTheme === 'system' && prefersDark);
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+      } catch (e) {}
+    })();
+    </script>
+    <style>
+      html, body { background: #f3f4f6; }
+      html[data-theme="dark"], html[data-theme="dark"] body { background: #000000; }
+    </style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans:wght@400;700;800&family=Noto+Serif:ital@1&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../biblia/stylebbl.css">
+    <link rel="stylesheet" href="../clickable/clickable.css">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <link rel="stylesheet" href="../clickable/agente-modal/agente-modal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.0.5/swiper-bundle.min.css">
+    <link rel="stylesheet" href="../imagem/swiper-zoom.css">
+    <link rel="stylesheet" href="../../navbar/navbar-unified.css">
+</head>
+<body  data-estudo="08-06" style="--cor-principal-estudo: #833500;" class="with-bottom-navbar">
+<script>
+  (function() {
+    try {
+      var color = getComputedStyle(document.body).getPropertyValue('--cor-principal-estudo').trim() || 'X';
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', color);
+    } catch (e) {}
+  })();
+</script>
+
+<nav class="bottom-navbar booting" data-context="navbar-context-watchtower">
+    <a href="#" class="navbar-item" data-page="home" onclick="irParaHome(event)">
+        <div class="navbar-icon icon-home"></div>
+        <span class="navbar-label">Início</span>
+    </a>
+    <a href="#" class="navbar-item" data-page="bible" onclick="irParaBiblia(event)">
+        <div class="navbar-icon icon-bible"></div>
+        <span class="navbar-label">Bíblia</span>
+    </a>
+    <a href="#" class="navbar-item" data-page="notes" onclick="irParaAnotacoes(event)">
+        <div class="navbar-icon icon-notes"></div>
+        <span class="navbar-label">Anotações</span>
+    </a>
+    <a href="#" class="navbar-item active" data-page="watchtower" onclick="irParaSentinela(event)">
+        <div class="navbar-icon icon-watchtower"></div>
+        <span class="navbar-label">A Sentinela</span>
+    </a>
+    <a href="#" class="navbar-item" data-page="save" onclick="irParaSalvar(event)">
+        <div class="navbar-icon icon-save"></div>
+        <span class="navbar-label">Salvar</span>
+    </a>
+</nav>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  window.semanaAtual = urlParams.get('semana') || '08-06';
+  window.estudoId = '2026365';
+</script>
+
+<div class="container">
+
+<header class="barra-estudo">
+<div>8 A 14 DE JUNHO DE 2026</div>
+</header>
+
+<main>
+
+<div class="secao-cantico"><p><span class="cantico">Cântico 8</span> <span class="cantico-titulo">Jeová é um refúgio</span></p></div>
+
+<h1 class="estudo-titulo">
+O “Deus da verdade” sempre cumpre o que promete
+</h1>
+
+<p class="citacao">
+“Tu me resgataste, ó Jeová, Deus da verdade.” — <a class="bbl">SAL. 31:5</a>.
+</p>
+
+<div class="objetivo"><p class="objetivo-titulo">OBJETIVO</p><p class="objetivo-texto">Aumentar nossa confiança de que Jeová vai cumprir todas as suas promessas e acabar com as mentiras de Satanás em breve.</p></div>
+
+<div><p class="pergunta"><span>1.</span> De acordo com <a class="bbl">Salmo 31:2-5</a>, por que podemos confiar em Jeová?</p></div>
+
+<p class="paragrafo"><span>1</span> VIVEMOS em um mundo controlado por Satanás. Mentiras, desonestidade e traição são coisas do dia a dia. É difícil saber em quem confiar. Empresários cometem fraudes, clientes são vítimas de propaganda enganosa e muitas pessoas percebem que não podem confiar nem mesmo nos seus amigos próximos. Mas é muito bom saber que sempre podemos confiar em Jeová. Ele é o “Deus da verdade”. <strong>(Leia <a class="bbl">Salmo 31:2-5</a>.)</strong> A verdade é parte essencial da personalidade dele. Jeová é de confiança, e nós podemos acreditar em tudo o que ele diz e faz.</p>
+
+<div><p class="pergunta"><span>2.</span> O que vamos ver neste estudo?</p></div>
+
+<p class="paragrafo"><span>2</span> Neste estudo, primeiro vamos ver que motivos temos para confiar em Jeová de todo o coração. Depois vamos considerar o que o Deus da verdade está fazendo agora para cumprir seu propósito e como ele vai acabar com o mundo mau de Satanás. Estudar esses pontos vai nos ajudar a falar de Jeová com coragem.</p>
+
+<h2 class="subtitulo">Por que podemos confiar no deus da verdade?</h2>
+
+<div><p class="pergunta"><span>3.</span> Por que podemos ter total confiança em Jeová?</p></div>
+
+<p class="paragrafo"><span>3</span> <strong><em>Nós podemos confiar em Jeová porque ele é o Criador.</em></strong> Ele fez o céu, a Terra e todas as coisas vivas. (<a class="bbl">Gên. 1:1</a>; <a class="bbl">Sal. 36:9</a>; <a class="bbl">Apo. 4:11</a>) Jeová também criou os ciclos naturais que são necessários para continuarmos vivos. Ele tem e sempre terá total controle do Universo. Então, podemos deixar nossa vida e nosso futuro nas mãos do nosso Criador, que é infinitamente sábio e poderoso.</p>
+
+<div><p class="pergunta"><span>4.</span> Como sabemos que Jeová nos ama?</p></div>
+
+<p class="paragrafo"><span>4</span> <strong><em>Podemos confiar em Jeová porque ele nos ama.</em></strong> Jeová nos criou porque queria compartilhar com a gente a maravilhosa dádiva da vida. Por nos criar ‘à sua imagem’, ele nos deu a capacidade de refletir suas belas qualidades, como o amor e a bondade. (<a class="bbl">Gên. 1:26</a>) Jeová também nos deu o livre-arbítrio e um planeta incrível para morarmos. (<a class="bbl">Sal. 115:16</a>) Além disso, ele abençoou nossos primeiros pais com uma tarefa empolgante: transformar a Terra num paraíso. (<a class="bbl">Gên. 1:28; 2:15</a>) E Jeová colocou à disposição deles tudo o que o nosso planeta oferece. Essas são provas de que “o amor leal de Jeová dura por toda a eternidade”. — <a class="bbl">Sal. 103:17</a></p>
+
+<div><p class="pergunta"><span>5.</span> (a) Apesar da desobediência de Adão e Eva, como Jeová manteve seu propósito? (b) Quais são algumas promessas que Jeová já cumpriu? (Veja o quadro “ Deus tem o histórico de falar a verdade”.)</p></div>
+
+<p class="paragrafo"><span>5</span> <strong><em>Podemos confiar em Jeová porque ele sempre faz o que diz.</em></strong> Jeová não criou a Terra “simplesmente para nada, mas a formou para ser habitada”. (<a class="bbl">Isa. 45:18, 19</a>) Quando Adão e Eva se rebelaram, eles foram condenados à morte. Então podia parecer que Deus tinha falhado em cumprir o seu propósito. Mas isso jamais aconteceria; Jeová sempre cumpre o que diz! (<a class="bbl">Isa. 46:10, 11</a>) Ele manteve seu propósito de encher a Terra com pessoas justas. Como ele fez isso? Jeová permitiu que Adão e Eva tivessem filhos. Ele também deu o seu Filho unigênito como resgate para salvar os descendentes de Adão, para que assim eles tivessem a esperança maravilhosa de viver para sempre. — <a class="bbl">João 3:16</a>.</p>
+
+<div class="quadro1">
+  <h3 class="quadro1-titulo">Deus tem o histórico de falar a verdade</h3>
+  <div class="quadro1-corpo">
+<p>Veja algumas das muitas promessas que Jeová já cumpriu:</p>
+
+<ul class="quadro1-lista">
+    <li>Ele prometeu a Moisés que daria aos israelitas uma terra boa que manava leite e mel. — <a class="bbl">Êxo. 3:6-8</a>; <a class="bbl">Deut. 27:3</a>.</li>
+    <li>Ele prometeu que o Messias viria para libertar a humanidade do pecado e da morte. — <a class="bbl">Isa. 53:11, 12</a>.</li>
+    <li>Ele prometeu que haveria uma obra de pregação mundial para ajudar as pessoas a conhecê-lo antes do fim. — <a class="bbl">Mat. 24:14</a>.</li>
+</ul>
+
+<p>Consegue pensar em outros exemplos que mostram que Jeová sempre cumpre suas promessas?</p>
+  </div>
+</div>
+
+<h2 class="subtitulo">O deus da verdade mantém seu propósito</h2>
+
+<div><p class="pergunta"><span>6.</span> Depois da rebelião de Adão e Eva, o que Jeová predisse?</p></div>
+
+<p class="paragrafo"><span>6</span> Quem influenciou Adão e Eva a se rebelar contra Deus foi “a serpente original, o chamado Diabo e Satanás”. *  (<a class="bbl">Apo. 12:9</a>; <a class="bbl">Gên. 3:4, 5</a>; <a class="bbl">João 8:44</a>) Como consequência, Jeová predisse que ele seria destruído. (<a class="bbl">Gên. 3:15</a>) Antes de isso acontecer, muitos iriam seguir Satanás e agir como ele. Mas alguns seriam leais a Jeová.</p>
+
+<div><p class="pergunta"><span>7.</span> Quem se juntou à rebelião de Satanás, e qual vai ser o fim deles?</p></div>
+
+<p class="paragrafo"><span>7</span> Muitos anjos e humanos decidiram desobedecer a Deus e se juntar a Satanás. Quem fica contra o propósito de Deus se torna parte da descendência de Satanás. Mas Jeová já determinou o tempo em que vai destruir Satanás e seus apoiadores. — <a class="bbl">Dan. 2:44</a>; <a class="bbl">Rom. 16:20</a>.</p>
+
+<div><p class="pergunta"><span>8.</span> O que Jesus fez em 1914? (Veja também as imagens.)</p></div>
+
+<p class="paragrafo"><span>8</span> Por que podemos ter certeza que Jeová vai cumprir seu propósito de destruir Satanás e seus apoiadores? Em 1914, Jesus iniciou uma guerra contra Satanás e seus demônios e os lançou para a Terra. (<a class="bbl">Apo. 12:7-9</a>) Essa guerra aconteceu no céu, mas os humanos puderam sentir os efeitos dela aqui na Terra. A Bíblia diz: “Ai da terra e do mar, porque o Diabo desceu a vocês com grande ira, pois sabe que lhe resta pouco tempo.” (<a class="bbl">Apo. 12:12</a>) Desde 1914, o principal objetivo de Satanás é desviar o máximo de pessoas possível. É por isso que a situação do mundo está cada vez pior. Mas em breve, Jesus vai “completar a sua vitória”, destruindo as pessoas que apoiam Satanás e prendendo Satanás por mil anos. (<a class="bbl">Apo. 6:2</a>) Jesus vai vindicar o nome de Jeová, e todos vão saber que Jeová é o Deus da verdade! — <a class="bbl">Sal. 45:4-6</a>; <a class="bbl">Eze. 38:23</a>.</p>
+
+<figure>
+<img src="https://cms-imgp.jw-cdn.org/img/p/2026365/T/art/2026365_T_cnt_1_xl.jpg">
+  <figcaption>
+    Desde 1914, a situação do mundo está cada vez pior (Veja o parágrafo 8.)
+  </figcaption>
+</figure>
+
+<h2 class="subtitulo">O deus da verdade reúne os que amam a verdade</h2>
+
+<div><p class="pergunta"><span>9.</span> Quem Jeová está reunindo?</p></div>
+
+<p class="paragrafo"><span>9</span> Enquanto Satanás e seus apoiadores não são destruídos, Jeová está ‘reunindo no Cristo todas as coisas, as coisas nos céus e as coisas na terra’. (<a class="bbl">Efé. 1:10</a>) A expressão “as coisas nos céus” se refere aos ungidos, que Jeová escolheu para governar com Cristo no céu. E a expressão “as coisas na terra” se refere aos que vão viver para sempre no Paraíso na Terra. Todos esses adoradores de Jeová fazem o máximo para expor as mentiras de Satanás e ajudar outros a aprender a verdade.</p>
+
+<div><p class="pergunta"><span>10.</span> O que Jeová está fazendo para ajudar as pessoas a aprender a verdade? (<a class="bbl">Apocalipse 14:6, 7</a>)</p></div>
+
+<p class="paragrafo"><span>10</span> Jeová está reunindo os que amam a verdade por meio da maior obra de pregação que o mundo já viu. <strong>(Leia <a class="bbl">Apocalipse 14:6, 7</a>.)</strong> Apesar de Jeová usar humanos para pregar, os anjos estão envolvidos nesse trabalho. A obra de pregação expõe as mentiras ensinadas pelas religiões falsas, que a Bíblia chama de Babilônia, a Grande. Já por séculos, Satanás tem usado Babilônia para ensinar mentiras sobre Jeová. (<a class="bbl">Apo. 18:2, 4</a>) Mas em breve as religiões falsas serão totalmente destruídas, e o Deus da verdade vai receber a glória que ele tanto merece. — <a class="bbl">Apo. 17:16</a>.</p>
+
+<div><p class="pergunta"><span>11.</span> Como é possível identificar os verdadeiros adoradores de Jeová?</p></div>
+
+<p class="paragrafo"><span>11</span> As pessoas que Jeová está reunindo vêm do mundo todo e são de todas as classes sociais, culturas e formações. (<a class="bbl">Apo. 7:9, 10</a>) Quando aprendem “as boas novas”, elas reconhecem que encontraram a verdade e têm a alegria de se juntar ao povo de Jeová. (<a class="bbl">Mar. 13:10</a>) A cada dia fica mais claro quem está servindo a Deus da maneira que ele quer e quem não está. O profeta Malaquias predisse: “Vocês verão novamente a diferença entre uma pessoa justa e uma pessoa má, entre quem serve a Deus e quem não o serve.” (<a class="bbl">Mal. 3:18</a>) É possível identificar os verdadeiros adoradores de Deus pela sua conduta e pela obra de pregação que realizam.</p>
+
+<div><p class="pergunta"><span>12.</span> O que acontece quando pregamos as boas novas?</p></div>
+
+<p class="paragrafo"><span>12</span> Quando pregamos as “boas novas do Reino”, obedecemos ao mandamento de Jesus e, ao mesmo tempo, estamos cumprindo profecias. (<a class="bbl">Mat. 24:14; 28:18-20</a>) Além disso, ajudamos pessoas do mundo inteiro a seguir a Cristo e a ter a esperança de adorar o Deus da verdade para sempre. Ao pregar as boas novas, participamos no cumprimento do propósito de Jeová, e isso é um grande privilégio!</p>
+
+<h2 class="subtitulo">Ninguém pode impedir jeová de agir</h2>
+
+<div><p class="pergunta"><span>13.</span> Quem são os principais alvos de Satanás e por quê?</p></div>
+
+<p class="paragrafo"><span>13</span> Satanás está muito irado. Ele sabe que “lhe resta pouco tempo” e que seu mundo vai ser destruído. (<a class="bbl">Apo. 12:12, 13</a>) Seus principais alvos são os representantes terrestres do Reino, porque eles “obedecem aos mandamentos de Deus e têm a obra de dar testemunho de Jesus”. (<a class="bbl">Apo. 12:17; 14:12</a>) Todo aquele que apoia esses representantes também se torna alvo de Satanás.</p>
+
+<div><p class="pergunta"><span>14.</span> O que vai acontecer quando os apoiadores de Satanás atacarem o povo de Jeová? (Veja também a imagem.)</p></div>
+
+<p class="paragrafo"><span>14</span> Depois da destruição de Babilônia, a Grande, os apoiadores de Satanás vão realizar um ataque total contra o povo de Jeová. Então a guerra do Armagedom vai começar. (<a class="bbl">Apo. 16:13, 14, 16</a>) Jesus e os exércitos celestiais vão salvar os adoradores de Jeová e destruir totalmente os outros elementos do mundo do Diabo. (<a class="bbl">Apo. 19:19-21</a>) Será o fim de todas as pessoas más e mentirosas. (<a class="bbl">Apo. 21:8</a>) O Deus da verdade e da justiça vai ser completamente vindicado.</p>
+
+<figure>
+<img src="https://cms-imgp.jw-cdn.org/img/p/2026365/univ/art/2026365_univ_cnt_2_xl.jpg">
+  <figcaption>
+    Jesus e os exércitos celestiais montados em cavalos durante a guerra do Armagedom, prontos para destruir os inimigos de Deus (Veja o parágrafo 14.)
+  </figcaption>
+</figure>
+
+<div><p class="pergunta"><span>15.</span> Por que temos certeza que nada pode impedir Jeová de agir? (<a class="bbl">Isaías 65:16, 17</a>) (Veja também a imagem.)</p></div>
+
+<p class="paragrafo"><span>15</span> O mundo de hoje está mais dividido do que nunca. Mas com a ajuda de Jeová, os servos dele continuam unidos. O processo de reunir as pessoas que amam a verdade já está acontecendo. Nada nem ninguém pode impedir Jeová de abençoar seus adoradores e o trabalho que fazem. <strong>(Leia <a class="bbl">Isaías 65:16, 17</a>.)</strong> Podemos ter certeza de que as promessas de Jeová vão se cumprir. Em <a class="bbl">Romanos 8:38, 39</a>, o apóstolo Paulo garante: “Nem a morte, nem a vida, nem anjos, nem governos, nem coisas presentes, nem coisas por vir, nem poderes, nem altura, nem profundidade, nem qualquer outra criação será capaz de nos separar do amor de Deus, que está em Cristo Jesus, nosso Senhor.”</p>
+
+<figure>
+<img src="https://cms-imgp.jw-cdn.org/img/p/2026365/univ/art/2026365_univ_cnt_3_xl.jpg">
+  <figcaption>
+    No novo mundo, não vamos nem lembrar dos problemas de hoje (Veja o parágrafo 15.)
+  </figcaption>
+</figure>
+
+<div><p class="pergunta"><span>16.</span> Por que você confia em Jeová de todo o coração?</p></div>
+
+<p class="paragrafo"><span>16</span> Temos todos os motivos para confiar em Jeová, o Deus da verdade. Ele é o nosso Criador e nos ama muito. Ele está reunindo cada vez mais pessoas de todo o mundo para adorá-lo do modo correto. (<a class="bbl">Isa. 60:22</a>; <a class="bbl">Zac. 8:23</a>) Além disso, Jeová sempre cumpre o que diz e, em breve, vai acabar com o mundo de Satanás e suas mentiras. Nós oramos assim como Davi, que disse: “Louvado seja Jeová Deus, . . . o único que faz coisas maravilhosas. Que o seu glorioso nome seja louvado para sempre e a sua glória encha a terra inteira.” — <a class="bbl">Sal. 72:18, 19</a>.</p>
+
+<div class="secao-recapitulacao">
+  <hr class="linha-recapitulacao">
+  <h3 class="titulo-recapitulacao">QUAL É A SUA RESPOSTA?</h3>
+  <ul class="lista-recapitulacao">
+          <li>Por que podemos confiar no “Deus da verdade”?</li>
+          <li>Como Jeová vai acabar com o mundo mau de Satanás e o que Ele está fazendo agora para cumprir seu propósito?</li>
+          <li>Por que temos certeza que nada pode impedir Jeová de agir?</li>
+  </ul>
+</div>
+
+<div class="secao-cantico"><p><span class="cantico">Cântico 2</span> <span class="cantico-titulo">Teu nome é Jeová</span></p></div>
+
+<hr class="linha-divisoria">
+
+<p class="nota-rodape"><span class="simbolo-rodape">*</span> A Bíblia não diz o nome desse anjo que ficou contra Jeová. Ela apenas o chama pelos títulos “Diabo” (que significa Caluniador) e “Satanás” (que significa Opositor).</p>
+
+</main>
+
+</div>
+
+<div id="modal-biblia">
+    <div class="modal-biblia-content">
+        <span id="modal-biblia-fechar">×</span>
+        <div id="modal-biblia-corpo"></div>
+    </div>
+</div>
+
+<script src="../biblia/abrev.js"></script>
+<script src="../biblia/scriptbbl.js"></script>
+<script src="../clickable/cache.js"></script>
+<script src="../clickable/agente_perguntas.js"></script>
+<script src="../clickable/agente_recap.js"></script>
+<script src="../clickable/agente-obj.js"></script>
+<script src="../clickable/agente-sub.js"></script>
+<script src="../clickable/agente-modal/agente-modal.js"></script>
+<script src="../clickable/clickable.js"></script>
+<script src="../menu/menu.js"></script>
+<script src="../mark.js"></script>
+<script src="../imagem/semanas/22-09/ilust/ilust-universal.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.0.5/swiper-bundle.min.js"></script>
+
+<script src="../imagem/swiper-zoom.js"></script>
+<script src="../imagem.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../save/config.js"></script>
+<script src="../../save/supabase.js"></script>
+<script src="../../navbar/navbar-unified.js"></script>
+<script src="../../save/sentinela-sync.js"></script>
+
+<div id="zoom-container" class="zoom-container">
+    <div class="zoom-header">
+        <button class="zoom-btn-fechar" aria-label="Fechar">×</button>
+    </div>
+    <div class="zoom-content"></div>
+    <div class="zoom-footer"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        document.querySelectorAll('.paragrafo').forEach((p, index) => {
+            if (!p.id) p.id = `paragrafo-sentinela-${index + 1}`;
+        });
+        if (window.CacheAnotacao) {
+            document.querySelectorAll('.paragrafo, .comentarios, .clickable').forEach(el => {
+                if (el.id) {
+                    const cachedContent = window.CacheAnotacao.carregar(el.id);
+                    if (cachedContent) el.innerHTML = cachedContent;
+                }
+            });
+        }
+        document.dispatchEvent(new CustomEvent('cacheRestored'));
+        if (window.UnifiedNavbar?.get()) {
+            window.UnifiedNavbar.get().setActivePage('watchtower');
+        }
+    }, 200);
+});
+</script>
+
+</body>
+</html>
