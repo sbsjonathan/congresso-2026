@@ -263,6 +263,40 @@
     }
   }
 
+
+  function isIOSStandalonePwa() {
+    const ua = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.navigator.standalone === true || !!window.matchMedia?.('(display-mode: standalone)')?.matches;
+    return isIOS && isStandalone;
+  }
+
+  function getFullscToolbarViewportMetrics() {
+    const vv = window.visualViewport;
+    const rawBottomGap = vv
+      ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))
+      : 0;
+
+    const keyboardOpen = rawBottomGap > 100;
+    let bottomGap = rawBottomGap;
+
+    // No iOS em modo PWA/standalone, o WebKit costuma entregar a barra fixa
+    // um pouco acima do teclado quando usamos o mesmo cálculo do navegador.
+    // A correção abaixo só roda em PWA + teclado aberto, então não mexe no Safari.
+    if (isIOSStandalonePwa() && keyboardOpen) {
+      const correction = Math.min(44, Math.max(26, Math.round(rawBottomGap * 0.08)));
+      bottomGap = Math.max(0, rawBottomGap - correction);
+      document.documentElement.style.setProperty('--fullsc-toolbar-pad-bottom', '10px');
+      document.body.classList.add('fullsc-pwa-keyboard-open');
+    } else {
+      document.documentElement.style.removeProperty('--fullsc-toolbar-pad-bottom');
+      document.body.classList.remove('fullsc-pwa-keyboard-open');
+    }
+
+    return { bottomGap, rawBottomGap, keyboardOpen };
+  }
+
   function bindToolbarSafety(editor) {
     if (!editor) return;
 
@@ -317,10 +351,7 @@
     const sync = () => {
       raf = 0;
 
-      const vv = window.visualViewport;
-      const bottomGap = vv
-        ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))
-        : 0;
+      const { bottomGap } = getFullscToolbarViewportMetrics();
 
       const toolbarHeight = Math.max(68, Math.round(toolbar.getBoundingClientRect().height || toolbar.offsetHeight || 68));
       document.documentElement.style.setProperty('--fullsc-visual-bottom-gap', `${bottomGap}px`);
