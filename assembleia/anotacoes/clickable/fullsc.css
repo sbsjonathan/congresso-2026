@@ -3,7 +3,6 @@
   --fullsc-bottom: max(14px, env(safe-area-inset-bottom));
 }
 
-/* ── RESET / TRAVA ──────────────────────────────── */
 html, body {
   position: fixed;
   inset: 0;
@@ -16,7 +15,6 @@ html, body {
   background: color-mix(in srgb, var(--cor-global, #2a7d7d) 6%, #f4f5f6);
 }
 
-/* ── ANIMAÇÃO DE ENTRADA ────────────────────────── */
 body.fullsc-boot .fullsc-app {
   opacity: 0;
   transform: translateY(22px) scale(0.990);
@@ -27,7 +25,6 @@ body.fullsc-ready .fullsc-app {
   transform: translateY(0) scale(1);
 }
 
-/* ── APP CONTAINER ──────────────────────────────── */
 .fullsc-app {
   position: absolute;
   inset: 0;
@@ -37,7 +34,6 @@ body.fullsc-ready .fullsc-app {
   transition: opacity 0.28s cubic-bezier(.22,.68,0,1.2), transform 0.28s cubic-bezier(.22,.68,0,1.2);
 }
 
-/* ── TOPBAR ─────────────────────────────────────── */
 .fullsc-topbar {
   flex: 0 0 auto;
   display: grid;
@@ -49,7 +45,6 @@ body.fullsc-ready .fullsc-app {
   z-index: 40;
 }
 
-/* ── HEADINGS (ocupa a coluna esquerda) ─────────── */
 .fullsc-headings {
   min-width: 0;
   display: flex;
@@ -76,7 +71,6 @@ body.fullsc-ready .fullsc-app {
   word-break: break-word;
 }
 
-/* ── BOTÃO FECHAR ─────────────────────────────── */
 .fullsc-back {
   appearance: none;
   border: none;
@@ -98,13 +92,10 @@ body.fullsc-ready .fullsc-app {
   background: rgba(255,255,255,0.25);
 }
 
-/* ── PLACEHOLDER PRÓPRIO DO FULLSC ──────────────── */
-.fullsc-app .editor > .node-paragraph:only-child
-  .paragraph-content[data-empty="true"]::before {
+.fullsc-app .editor > .node-paragraph:only-child .paragraph-content[data-empty="true"]::before {
   content: "Escreva aqui suas anotações do congresso…" !important;
 }
 
-/* ── STATUS (salvo, etc.) ───────────────────────── */
 .fullsc-status {
   font-size: 11px;
   font-weight: 600;
@@ -115,7 +106,6 @@ body.fullsc-ready .fullsc-app {
 
 .fullsc-status[hidden] { display: none !important; }
 
-/* ── ÁREA DE SCROLL ─────────────────────────────── */
 .fullsc-app .editor-scroll {
   flex: 1;
   min-height: 0;
@@ -124,7 +114,6 @@ body.fullsc-ready .fullsc-app {
   padding: 14px 0 calc(80px * var(--font-scale-global));
 }
 
-/* ── FOLHA ──────────────────────────────────────── */
 .fullsc-app .page {
   width: min(920px, calc(100vw - 20px));
   margin: 0 auto;
@@ -139,16 +128,14 @@ body.fullsc-ready .fullsc-app {
   flex-direction: column;
 }
 
-/* ── EDITOR ─────────────────────────────────────── */
 .fullsc-app .editor {
   flex: 1 0 auto;
   padding: calc(18px * var(--font-scale-global))
            calc(18px * var(--font-scale-global))
-           calc(40px * var(--font-scale-global));
+           calc(320px * var(--font-scale-global)) !important;
   outline: none;
 }
 
-/* ── BARRA DO RICHTEXT NO FULLSC ────────────────── */
 :root {
   --fullsc-visual-bottom-gap: 0px;
   --fullsc-toolbar-bottom: max(env(safe-area-inset-bottom, 0px), var(--fullsc-visual-bottom-gap));
@@ -225,7 +212,6 @@ body.fullsc-bible-modal-open .modal-biblia-content {
   max-height: calc(100vh - var(--fullsc-toolbar-bottom) - var(--kbd-toolbar-real-height, 68px) - 34px);
 }
 
-/* ── ESTADOS ────────────────────────────────────── */
 .fullsc-kicker.is-hidden,
 .fullsc-kicker[hidden] {
   display: none !important;
@@ -233,12 +219,11 @@ body.fullsc-bible-modal-open .modal-biblia-content {
 
 .fullsc-back:disabled { opacity: .5; }
 
-body.fullsc-busy .fullsc-app         { pointer-events: none; }
+body.fullsc-busy .fullsc-app { pointer-events: none; }
 body.fullsc-busy .fullsc-topbar,
 body.fullsc-busy .fullsc-back,
-body.fullsc-busy .fullsc-status      { pointer-events: auto; }
+body.fullsc-busy .fullsc-status { pointer-events: auto; }
 
-/* ── RESPONSIVO ─────────────────────────────────── */
 @media (max-width: 640px) {
   .fullsc-topbar {
     padding-left: 12px;
@@ -250,9 +235,6 @@ body.fullsc-busy .fullsc-status      { pointer-events: auto; }
   }
 }
 
-/* ========================================= */
-/* --- DARK MODE OVERRIDES (FULL SCREEN) --- */
-/* ========================================= */
 [data-theme="dark"],
 [data-theme="dark"] body {
   background: color-mix(in srgb, var(--cor-global, #2a7d7d) 10%, #000) !important;
@@ -260,7 +242,9 @@ body.fullsc-busy .fullsc-status      { pointer-events: auto; }
 
 [data-theme="dark"] .fullsc-app {
   background: color-mix(in srgb, var(--cor-global, #2a7d7d) 10%, #000);
-}[data-theme="dark"] .fullsc-app .page {
+}
+
+[data-theme="dark"] .fullsc-app .page {
   background: #1c1c1e;
   box-shadow: 0 0 0 0.5px rgba(255,255,255,0.08), 
               0 4px 24px rgba(0,0,0,0.4), 
@@ -272,7 +256,9 @@ body.fullsc-busy .fullsc-status      { pointer-events: auto; }
 }
 
 [data-theme="dark"] .fullsc-app .editor,
-[data-theme="dark"] .fullsc-app .editor .toggle-title,[data-theme="dark"] .fullsc-app .editor .text-content,[data-theme="dark"] .fullsc-app .editor .paragraph-content {
+[data-theme="dark"] .fullsc-app .editor .toggle-title,
+[data-theme="dark"] .fullsc-app .editor .text-content,
+[data-theme="dark"] .fullsc-app .editor .paragraph-content {
   color: #f2f2f7;
 }
 
