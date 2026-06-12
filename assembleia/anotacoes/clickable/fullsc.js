@@ -281,6 +281,109 @@
     requestAnimationFrame(refresh);
   }
 
+
+  function setupFullscRichtextToolbarBridge(editor) {
+    const toolbar = document.getElementById('kbdToolbar');
+    if (!toolbar) return;
+
+    const glass = document.getElementById('glassFx');
+    const leitorBtn = toolbar.querySelector('[aria-label="Modo Bíblia"]');
+
+    document.body.classList.add('fullsc-richtext-toolbar');
+    toolbar.setAttribute('data-fullsc-toolbar', 'true');
+
+    // No fullsc, .fullsc-app recebe transform e vira stacking-context.
+    // O modal bíblico é inserido direto no body; por isso a barra ficava presa atrás dele.
+    // Tirando a barra do .fullsc-app, ela passa a flutuar igual à barra original do richtext.
+    if (glass && glass.parentElement !== document.body) document.body.appendChild(glass);
+    if (toolbar.parentElement !== document.body) document.body.appendChild(toolbar);
+
+    let raf = 0;
+
+    const modalIsOpen = () => {
+      const modal = document.getElementById('modal-biblia');
+      if (!modal) return false;
+      const style = window.getComputedStyle(modal);
+      return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+    };
+
+    const readerIsActive = () => {
+      return document.body.classList.contains('leitor-keep-toolbar') ||
+        toolbar.classList.contains('leitor-toolbar-locked') ||
+        editor?.getAttribute('contenteditable') === 'false' ||
+        leitorBtn?.getAttribute('aria-pressed') === 'true';
+    };
+
+    const sync = () => {
+      raf = 0;
+
+      const vv = window.visualViewport;
+      const bottomGap = vv
+        ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))
+        : 0;
+
+      const toolbarHeight = Math.max(68, Math.round(toolbar.getBoundingClientRect().height || toolbar.offsetHeight || 68));
+      document.documentElement.style.setProperty('--fullsc-visual-bottom-gap', `${bottomGap}px`);
+      document.documentElement.style.setProperty('--kbd-toolbar-real-height', `${toolbarHeight}px`);
+
+      const active = readerIsActive();
+      const modalOpen = modalIsOpen();
+
+      document.body.classList.toggle('fullsc-reader-active', active);
+      document.body.classList.toggle('fullsc-bible-modal-open', modalOpen);
+
+      if (active || modalOpen) {
+        document.body.classList.add('editor-has-focus');
+      }
+    };
+
+    const queueSync = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(sync);
+    };
+
+    const observeModal = () => {
+      const modal = document.getElementById('modal-biblia');
+      if (!modal || modal.__fullscToolbarObserved) return;
+      modal.__fullscToolbarObserved = true;
+      modalObserver.observe(modal, { attributes: true, attributeFilter: ['style', 'class'] });
+    };
+
+    const modalObserver = new MutationObserver(queueSync);
+    const stateObserver = new MutationObserver(() => {
+      observeModal();
+      queueSync();
+    });
+
+    stateObserver.observe(document.body, { attributes: true, attributeFilter: ['class', 'style'], childList: true });
+    stateObserver.observe(toolbar, { attributes: true, attributeFilter: ['class', 'style'] });
+    if (editor) stateObserver.observe(editor, { attributes: true, attributeFilter: ['contenteditable', 'class'] });
+    if (leitorBtn) stateObserver.observe(leitorBtn, { attributes: true, attributeFilter: ['aria-pressed', 'class'] });
+
+    observeModal();
+
+    const originalAbrirModalBibl = window.abrirModalBibl;
+    if (typeof originalAbrirModalBibl === 'function' && !originalAbrirModalBibl.__fullscToolbarWrapped) {
+      const wrappedAbrirModalBibl = function (...args) {
+        document.body.classList.add('fullsc-reader-active', 'fullsc-bible-modal-open', 'editor-has-focus');
+        const result = originalAbrirModalBibl.apply(this, args);
+        setTimeout(queueSync, 0);
+        setTimeout(queueSync, 80);
+        return result;
+      };
+      wrappedAbrirModalBibl.__fullscToolbarWrapped = true;
+      window.abrirModalBibl = wrappedAbrirModalBibl;
+    }
+
+    window.addEventListener('resize', queueSync, { passive: true });
+    window.addEventListener('orientationchange', queueSync, { passive: true });
+    window.visualViewport?.addEventListener('resize', queueSync, { passive: true });
+    window.visualViewport?.addEventListener('scroll', queueSync, { passive: true });
+
+    queueSync();
+    setTimeout(queueSync, 80);
+  }
+
   async function init() {
     setupBack();
     setupTitle();
@@ -293,6 +396,7 @@
     const agent = getAgent();
     const fullHtml = agent?.getFullHTML ? agent.getFullHTML(key) : '';
     applyHTML(editor, fullHtml);
+    setupFullscRichtextToolbarBridge(editor);
     bindToolbarSafety(editor);
     syncToolbarFocusState(editor);
     if (typeof M4_Caret !== 'undefined' && typeof M4_Caret.updateFocus === 'function') {
