@@ -9,13 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let busy = false;
     let lastStatus = null;
+    let storageInfo = '';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'btn btn-danger';
+    clearBtn.style.marginTop = '8px';
+    clearBtn.style.display = 'none';
+    clearBtn.textContent = '🗑️ Apagar dados offline';
+    clearBtn.addEventListener('click', () => { if (!busy) clearCache(); });
+    btnToggle.insertAdjacentElement('afterend', clearBtn);
 
     function supported() {
         return 'serviceWorker' in navigator;
     }
 
     function setHint(text) {
-        if (offlineHint) offlineHint.textContent = text;
+        if (offlineHint) offlineHint.textContent = text + storageInfo;
     }
 
     function showProgress(show) {
@@ -38,12 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function render(status) {
         lastStatus = status;
-
         if (busy) return;
+
+        const partial = !!(status && !status.complete && status.present > 0);
+        clearBtn.style.display = partial ? 'block' : 'none';
 
         if (!status) {
             btnToggle.disabled = false;
-            btnToggle.innerHTML = '⬇️ Baixar para uso offline';
+            btnToggle.textContent = '⬇️ Baixar para uso offline';
             btnToggle.classList.add('btn-secondary');
             btnToggle.classList.remove('btn-danger');
             setHint('Baixe a Bíblia e a Sentinela para ler sem internet.');
@@ -53,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnToggle.disabled = false;
 
         if (status.complete) {
-            btnToggle.innerHTML = '🗑️ Apagar dados offline';
+            btnToggle.textContent = '🗑️ Apagar dados offline';
             btnToggle.classList.remove('btn-secondary');
             btnToggle.classList.add('btn-danger');
             setHint('✓ Disponível offline.' + articleLine(status));
@@ -62,14 +74,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (status.present > 0) {
             const faltam = status.total - status.present;
-            btnToggle.innerHTML = '⬇️ Completar download';
+            btnToggle.textContent = '⬇️ Completar download';
             btnToggle.classList.add('btn-secondary');
             btnToggle.classList.remove('btn-danger');
-            setHint('Baixado parcialmente: ' + status.present + ' de ' + status.total + ' itens (faltam ' + faltam + '). Toque para completar.');
+            setHint('Baixado parcialmente: ' + status.present + ' de ' + status.total + ' itens (faltam ' + faltam + ').');
             return;
         }
 
-        btnToggle.innerHTML = '⬇️ Baixar para uso offline';
+        btnToggle.textContent = '⬇️ Baixar para uso offline';
         btnToggle.classList.add('btn-secondary');
         btnToggle.classList.remove('btn-danger');
         setHint('Baixe a Bíblia e a Sentinela para ler sem internet.');
@@ -77,6 +89,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getActiveWorker() {
         return navigator.serviceWorker.ready.then((reg) => reg.active || navigator.serviceWorker.controller);
+    }
+
+    async function initStorage() {
+        try {
+            if (navigator.storage && navigator.storage.persist) {
+                await navigator.storage.persist();
+            }
+            if (navigator.storage && navigator.storage.estimate) {
+                const est = await navigator.storage.estimate();
+                const usedMB = (est.usage || 0) / 1048576;
+                const quotaMB = (est.quota || 0) / 1048576;
+                storageInfo = ' · Guardado: ' + usedMB.toFixed(1) + ' MB de ~' + quotaMB.toFixed(0) + ' MB.';
+            }
+        } catch (e) {}
     }
 
     function requestCacheStatus() {
@@ -124,7 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showProgress(true);
         setProgress(0, 1);
         btnToggle.disabled = true;
-        btnToggle.innerHTML = 'Baixando...';
+        clearBtn.style.display = 'none';
+        btnToggle.textContent = 'Baixando...';
         sw.postMessage({ action: 'START_DOWNLOAD' });
     }
 
@@ -134,7 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Apagar os arquivos offline para liberar espaço? (Suas anotações locais não serão perdidas.)')) return;
         busy = true;
         btnToggle.disabled = true;
-        btnToggle.innerHTML = 'Apagando...';
+        clearBtn.style.display = 'none';
+        btnToggle.textContent = 'Apagando...';
         sw.postMessage({ action: 'CLEAR_CACHE' });
     }
 
@@ -144,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (busy) return;
-
         const status = lastStatus;
         if (status && status.complete) {
             clearCache();
@@ -163,13 +190,21 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.type === 'DOWNLOAD_COMPLETE') {
                 busy = false;
                 showProgress(false);
+                const missingUrls = Array.isArray(data.missingUrls) ? data.missingUrls : [];
+                await initStorage();
                 const status = await refreshStatus();
                 const complete = status ? status.complete : data.ok;
                 if (complete) {
                     alert('Download concluído. Agora você pode abrir a Bíblia e a Sentinela sem internet.');
                 } else {
                     const faltam = status ? (status.total - status.present) : (data.missing || 0);
-                    alert('Faltaram ' + faltam + ' itens. Toque em "Completar download" para tentar de novo quando tiver uma conexão melhor.');
+                    const nomes = missingUrls.slice(0, 6).map((u) => {
+                        try { return decodeURIComponent(String(u).split('/').pop()); } catch (e) { return String(u); }
+                    }).filter(Boolean).join(', ');
+                    let msg = 'Faltaram ' + faltam + ' itens.';
+                    if (nomes) msg += '\n\nArquivos com erro: ' + nomes;
+                    msg += '\n\nToque em "Completar download" para tentar de novo.';
+                    alert(msg);
                 }
             } else if (data.type === 'DOWNLOAD_ERROR') {
                 busy = false;
@@ -179,10 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.type === 'CACHE_CLEARED') {
                 busy = false;
                 showProgress(false);
+                await initStorage();
                 await refreshStatus();
             }
         });
     }
 
+    initStorage().then(() => { if (!busy) render(lastStatus); });
     refreshStatus();
 });
