@@ -325,7 +325,8 @@ async function startDownload(source) {
             ok: missing === 0,
             loaded: total - missing,
             total: total,
-            missing: missing
+            missing: missing,
+            missingUrls: failed.map(function (t) { return t.url; })
         });
     } catch (e) {
         if (source) source.postMessage({ type: 'DOWNLOAD_ERROR' });
