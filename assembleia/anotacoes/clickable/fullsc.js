@@ -279,22 +279,43 @@
       : 0;
 
     const keyboardOpen = rawBottomGap > 100;
-    let bottomGap = rawBottomGap;
+    const pwaKeyboardOpen = isIOSStandalonePwa() && keyboardOpen;
+    const bottomGap = pwaKeyboardOpen ? 0 : rawBottomGap;
 
-    // No iOS em modo PWA/standalone, o WebKit costuma entregar a barra fixa
-    // um pouco acima do teclado quando usamos o mesmo cálculo do navegador.
-    // A correção abaixo só roda em PWA + teclado aberto, então não mexe no Safari.
-    if (isIOSStandalonePwa() && keyboardOpen) {
-      const correction = Math.min(44, Math.max(26, Math.round(rawBottomGap * 0.08)));
-      bottomGap = Math.max(0, rawBottomGap - correction);
-      document.documentElement.style.setProperty('--fullsc-toolbar-pad-bottom', '10px');
+    if (pwaKeyboardOpen) {
+      document.documentElement.style.setProperty('--fullsc-toolbar-pad-bottom', '12px');
       document.body.classList.add('fullsc-pwa-keyboard-open');
     } else {
       document.documentElement.style.removeProperty('--fullsc-toolbar-pad-bottom');
       document.body.classList.remove('fullsc-pwa-keyboard-open');
     }
 
-    return { bottomGap, rawBottomGap, keyboardOpen };
+    return { bottomGap, rawBottomGap, keyboardOpen, pwaKeyboardOpen, visualHeight: vv ? Math.round(vv.height) : 0 };
+  }
+
+  function applyPwaToolbarLikeRichtext(toolbar, glass, metrics) {
+    if (!toolbar) return;
+
+    // A posição perfeita do richtext/container vem de uma lógica simples:
+    // o body encurta para a altura do visualViewport e a barra fica absoluta no bottom:0.
+    // No fullsc deixamos o modo navegador como está; só o PWA/iOS com teclado aberto usa esse modelo.
+    if (metrics?.pwaKeyboardOpen && metrics.visualHeight > 0) {
+      document.body.style.height = `${metrics.visualHeight}px`;
+      toolbar.style.position = 'absolute';
+      toolbar.style.bottom = '0px';
+      toolbar.style.paddingBottom = '12px';
+      if (glass) glass.style.position = 'absolute';
+      return;
+    }
+
+    toolbar.style.removeProperty('position');
+    toolbar.style.removeProperty('bottom');
+    toolbar.style.removeProperty('padding-bottom');
+    if (glass) glass.style.removeProperty('position');
+
+    if (isIOSStandalonePwa() && !metrics?.keyboardOpen) {
+      document.body.style.height = '100%';
+    }
   }
 
   function bindToolbarSafety(editor) {
@@ -351,7 +372,9 @@
     const sync = () => {
       raf = 0;
 
-      const { bottomGap } = getFullscToolbarViewportMetrics();
+      const metrics = getFullscToolbarViewportMetrics();
+      applyPwaToolbarLikeRichtext(toolbar, glass, metrics);
+      const { bottomGap } = metrics;
 
       const toolbarHeight = Math.max(68, Math.round(toolbar.getBoundingClientRect().height || toolbar.offsetHeight || 68));
       document.documentElement.style.setProperty('--fullsc-visual-bottom-gap', `${bottomGap}px`);
