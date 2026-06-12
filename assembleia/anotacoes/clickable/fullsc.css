@@ -148,11 +148,81 @@ body.fullsc-ready .fullsc-app {
   outline: none;
 }
 
-/* ── BARRA DO RICHTEXT ──────────────────────────── */
-.fullsc-app .kbd-toolbar {
+/* ── BARRA DO RICHTEXT NO FULLSC ────────────────── */
+:root {
+  --fullsc-visual-bottom-gap: 0px;
+  --fullsc-toolbar-bottom: max(env(safe-area-inset-bottom, 0px), var(--fullsc-visual-bottom-gap));
+  --fullsc-toolbar-pad-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.fullsc-app .kbd-toolbar,
+body.fullsc-richtext-toolbar .kbd-toolbar {
   position: fixed;
-  bottom: env(safe-area-inset-bottom, 0);
-  z-index: 99999;
+  left: 0;
+  right: 0;
+  bottom: var(--fullsc-toolbar-bottom);
+  z-index: 3200;
+  padding-bottom: var(--fullsc-toolbar-pad-bottom);
+}
+
+body.fullsc-richtext-toolbar .glass-fx {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3190;
+}
+
+body.fullsc-reader-active .kbd-toolbar,
+body.fullsc-bible-modal-open .kbd-toolbar,
+body.leitor-keep-toolbar .kbd-toolbar {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) scale(1) !important;
+  pointer-events: none;
+}
+
+body.fullsc-reader-active .pill-container,
+body.fullsc-bible-modal-open .pill-container,
+body.leitor-keep-toolbar .pill-container {
+  max-width: 402px !important;
+  pointer-events: auto;
+}
+
+body.fullsc-reader-active .tool-slot > div,
+body.fullsc-bible-modal-open .tool-slot > div,
+body.leitor-keep-toolbar .tool-slot > div {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+
+body.fullsc-reader-active .tool-slot:not(:last-child)::after,
+body.fullsc-bible-modal-open .tool-slot:not(:last-child)::after,
+body.leitor-keep-toolbar .tool-slot:not(:last-child)::after {
+  opacity: 0.7 !important;
+  transform: scaleY(1) !important;
+}
+
+body.fullsc-reader-active .kbd-toolbar.leitor-toolbar-locked .tool-btn[aria-label="Modo Bíblia"],
+body.fullsc-bible-modal-open .kbd-toolbar.leitor-toolbar-locked .tool-btn[aria-label="Modo Bíblia"],
+body.leitor-keep-toolbar .kbd-toolbar.leitor-toolbar-locked .tool-btn[aria-label="Modo Bíblia"] {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+body.fullsc-reader-active .fullsc-app .editor-scroll,
+body.fullsc-bible-modal-open .fullsc-app .editor-scroll,
+body.leitor-keep-toolbar .fullsc-app .editor-scroll {
+  padding-bottom: calc(var(--fullsc-toolbar-bottom) + var(--kbd-toolbar-real-height, 68px) + var(--kbd-toolbar-bottom-gap, 12px) + 18px);
+}
+
+body.fullsc-bible-modal-open #modal-biblia {
+  z-index: 2000;
+  padding-bottom: calc(var(--fullsc-toolbar-bottom) + var(--kbd-toolbar-real-height, 68px) + var(--kbd-toolbar-bottom-gap, 12px) + 12px) !important;
+}
+
+body.fullsc-bible-modal-open .modal-biblia-content {
+  max-height: calc(100vh - var(--fullsc-toolbar-bottom) - var(--kbd-toolbar-real-height, 68px) - 34px);
 }
 
 /* ── ESTADOS ────────────────────────────────────── */
