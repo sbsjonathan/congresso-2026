@@ -660,6 +660,14 @@
       return written;
     }
 
+    if (!navigator.onLine) {
+      record.status = record.hasSummary ? 'summarized' : 'idle';
+      record.errorMessage = '';
+      const written = writeRecord(id, record);
+      dispatchRecordChange(id, written);
+      return written;
+    }
+
     record.summaryText = '';
     record.hasSummary = false;
     record.status = 'pending';
