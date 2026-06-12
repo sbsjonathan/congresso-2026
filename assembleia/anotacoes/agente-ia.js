@@ -261,16 +261,6 @@
     return limited;
   }
 
-  function sanitizeUrl(url) {
-    try {
-      const u = new URL(String(url), location.href);
-      if (u.searchParams.has('key')) u.searchParams.set('key', '***');
-      return u.toString();
-    } catch {
-      return String(url || '').replace(/([?&]key=)[^&]+/i, '$1***');
-    }
-  }
-
   function serializeError(error) {
     if (!error) return { message: 'Erro desconhecido' };
     return { name: error.name || 'Error', message: error.message || String(error), stack: error.stack || '' };
@@ -366,7 +356,63 @@
     return error;
   }
 
-  async function callGemini(text) {
+  function extractContext(id) {
+    if (!id) return '';
+    let temaDia = '';
+    let temaSimposio = '';
+    let temaDiscurso = '';
+
+    const isFullScreen = !!document.querySelector('.fullsc-app');
+    if (isFullScreen) {
+      const titleEl = document.getElementById('fullscTitle');
+      if (titleEl) temaDiscurso = titleEl.textContent.replace(/\s+/g, ' ').trim();
+      const kicker = document.querySelector('.fullsc-kicker');
+      if (kicker && !kicker.classList.contains('is-hidden') && !kicker.hidden) {
+        temaSimposio = kicker.textContent.replace(/\s+/g, ' ').trim();
+      }
+    } else {
+      const temaEl = document.querySelector('.tema');
+      if (temaEl) {
+        temaDia = temaEl.textContent.replace(/\s+/g, ' ').trim();
+      }
+      try {
+        const trigger = document.querySelector(`[data-clickable-id="${CSS.escape(id)}"]`);
+        if (trigger) {
+          const clone = trigger.cloneNode(true);
+          clone.querySelectorAll('.hora').forEach(n => n.remove());
+          temaDiscurso = clone.textContent.replace(/\s+/g, ' ').trim();
+
+          if (trigger.tagName.toUpperCase() === 'LI') {
+            let node = trigger.parentElement;
+            while (node) {
+              let prev = node.previousElementSibling;
+              while (prev) {
+                if (prev.tagName.toUpperCase() === 'P') {
+                  const pClone = prev.cloneNode(true);
+                  pClone.querySelectorAll('.hora').forEach(n => n.remove());
+                  temaSimposio = pClone.textContent.replace(/\s+/g, ' ').trim();
+                  break;
+                }
+                prev = prev.previousElementSibling;
+              }
+              if (temaSimposio) break;
+              node = node.parentElement;
+              if (!node || node === document.body) break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    let partes = [];
+    if (temaDia) partes.push(`TEMA DO DIA: ${temaDia}`);
+    if (temaSimposio) partes.push(`SIMPÓSIO: ${temaSimposio}`);
+    if (temaDiscurso) partes.push(`DISCURSO: ${temaDiscurso}`);
+
+    return partes.join(' | ');
+  }
+
+  async function callGemini(text, id) {
     const preparedText = prepareInputText(text);
     const models = getModelQueue();
     const workerUrl = String(CONFIG.workerUrl || '').trim().replace(/\/$/, '');
@@ -374,7 +420,12 @@
       throw createApiError('Worker de IA não configurado.', { status: 0, canFallback: false });
     }
 
-    const systemInstruction = `Você é uma Testemunha de Jeová fiel, que respeita plenamente as crenças, a terminologia e as normas dessa religião. Resuma em português do Brasil o texto recebido (anotações de um discurso de congresso) em 2 a 3 frases, cobrindo só as ideias centrais. Escreva como um irmão sóbrio e respeitoso, porém de forma impessoal: sem falar na primeira pessoa, sem se dirigir ao leitor, sem bajulação e sem conversa. Entregue apenas o resumo fiel do conteúdo, sem inventar, sem acrescentar pregação ou opinião. Mantenha as referências bíblicas citadas. Use a terminologia das publicações (por exemplo, Jeová). Não use prefixos, aspas nem reticências.`;
+    const contexto = extractContext(id);
+    let systemInstruction = `Você é uma Testemunha de Jeová fiel, que respeita plenamente as crenças, a terminologia e as normas dessa religião. Resuma em português do Brasil o texto recebido (anotações de um discurso de congresso) em 2 a 3 frases, cobrindo só as ideias centrais. Escreva como um irmão sóbrio e respeitoso, porém de forma impessoal: sem falar na primeira pessoa, sem se dirigir ao leitor, sem bajulação e sem conversa. Entregue apenas o resumo fiel do conteúdo, sem inventar, sem acrescentar pregação ou opinião. Mantenha as referências bíblicas citadas. Use a terminologia das publicações (por exemplo, Jeová). Não use prefixos, aspas nem reticências.`;
+
+    if (contexto) {
+      systemInstruction += `\n\nCONTEXTO DO DISCURSO (Use para nortear o resumo e garantir que a sua interpretação das anotações seja fiel ao que estava sendo ensinado no momento, mas não inclua o próprio contexto na sua resposta):\n${contexto}`;
+    }
 
     const payload = {
       prompt: preparedText,
@@ -660,14 +711,6 @@
       return written;
     }
 
-    if (!navigator.onLine) {
-      record.status = record.hasSummary ? 'summarized' : 'idle';
-      record.errorMessage = '';
-      const written = writeRecord(id, record);
-      dispatchRecordChange(id, written);
-      return written;
-    }
-
     record.summaryText = '';
     record.hasSummary = false;
     record.status = 'pending';
@@ -696,7 +739,7 @@
 
     const job = (async () => {
       try {
-        const result = await callGemini(record.fullText);
+        const result = await callGemini(record.fullText, id);
         const latest = readRecord(id);
         if (getRecordStatus(latest) !== 'pending' || latest.pendingToken !== token) return latest;
         latest.summaryText = clampSummary(result.summary);
