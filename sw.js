@@ -1,4 +1,4 @@
-const APP_VERSION = 'v5';
+const APP_VERSION = 'v6';
 const CACHE_APP = 'sentinela-app-' + APP_VERSION;
 const CACHE_BIBLE = 'sentinela-bible-v1';
 const CACHE_RUNTIME = 'sentinela-runtime-' + APP_VERSION;
@@ -17,7 +17,6 @@ const NETWORK_ONLY_HOSTS = ['supabase.co', 'workers.dev'];
 const APP_FILES = [
     '',
     'index.html',
-    'styles.css',
     'main.js',
     'manifest.json',
     'assets/icons/app-icon.svg',
@@ -113,9 +112,7 @@ const OPTIONAL_FILES = [
     'assets/icons/icon-192.png',
     'assets/icons/icon-512.png',
     'assets/icons/maskable-icon-512.png',
-    'worker/worker.html',
-    'save/sync-bridge.js',
-    'save/feedback.js'
+    'worker/worker.html'
 ];
 
 const BIBLE_BOOKS = [
