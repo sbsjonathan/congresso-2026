@@ -466,6 +466,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const forceEdit = () => { if (!isReadOnly) return; isReadOnly = false; disableReadOnly(); };
 
+  window.LeitorMode = {
+    toggle,
+    desativar: forceEdit,
+    ativo: () => isReadOnly
+  };
+
   window.addEventListener('pagehide', forceEdit); window.addEventListener('beforeunload', forceEdit); window.addEventListener('pageshow', () => { if (!isReadOnly) resetArtifacts(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !isReadOnly) resetArtifacts(); });
 
