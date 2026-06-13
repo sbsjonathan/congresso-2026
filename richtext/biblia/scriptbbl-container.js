@@ -57,7 +57,7 @@
   async function abrirModalBibl(referencia, triggerElement = null) {
     if (typeof ABREVIACOES === 'undefined') return;
     
-    lastClickedBbl = triggerElement; // Guarda a referência do elemento clicado
+    lastClickedBbl = triggerElement;
     isModalOpen = true;
     blockTextSelection();
     
@@ -144,21 +144,31 @@
         window.LeitorMode.desativar();
     }
 
-    requestAnimationFrame(() => {
-        try {
-            if (editor) editor.focus();
-            const range = document.createRange();
-            range.setStartAfter(blocoEl);
-            range.collapse(true);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-            if (document.queryCommandState && document.queryCommandState('italic')) document.execCommand('italic', false, null);
-            if (document.queryCommandState && document.queryCommandState('bold')) document.execCommand('bold', false, null);
-            if (window.M13_Negrita && window.M13_Negrita.clearTypingState) window.M13_Negrita.clearTypingState();
-            if (window.M4_Caret && window.M4_Caret.updateFocus) window.M4_Caret.updateFocus(true);
-        } catch (e) {}
-    });
+    try {
+        if (editor) editor.focus();
+
+        let anchor = blocoEl.nextSibling;
+        let offset;
+        if (anchor && anchor.nodeType === 3) {
+            offset = 0;
+        } else {
+            anchor = document.createTextNode('\u200B');
+            blocoEl.after(anchor);
+            offset = 1;
+        }
+
+        const range = document.createRange();
+        range.setStart(anchor, offset);
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        if (document.queryCommandState && document.queryCommandState('italic')) document.execCommand('italic', false, null);
+        if (document.queryCommandState && document.queryCommandState('bold')) document.execCommand('bold', false, null);
+        if (window.M13_Negrita && window.M13_Negrita.clearTypingState) window.M13_Negrita.clearTypingState();
+        if (window.M4_Caret && window.M4_Caret.updateFocus) window.M4_Caret.updateFocus(true);
+    } catch (e) {}
   }
 
   function setupBblLinkListeners(linkEl) {
