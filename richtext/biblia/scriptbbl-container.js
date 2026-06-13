@@ -114,13 +114,16 @@
 
     if (window.M12_History && window.M12_History.beforeChange) window.M12_History.beforeChange();
 
+    let blocoEl;
     if (blocoExistente) {
         blocoExistente.innerHTML = innerHtml;
+        blocoEl = blocoExistente;
     } else {
         const bloco = document.createElement('span');
         bloco.className = 'versiculo-bloco';
         bloco.innerHTML = innerHtml;
         lastClickedBbl.replaceWith(bloco);
+        blocoEl = bloco;
     }
 
     if (typeof M3_TextModel !== 'undefined') {
@@ -136,6 +139,26 @@
     }
 
     fecharModal();
+
+    if (window.LeitorMode && typeof window.LeitorMode.desativar === 'function') {
+        window.LeitorMode.desativar();
+    }
+
+    requestAnimationFrame(() => {
+        try {
+            if (editor) editor.focus();
+            const range = document.createRange();
+            range.setStartAfter(blocoEl);
+            range.collapse(true);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            if (document.queryCommandState && document.queryCommandState('italic')) document.execCommand('italic', false, null);
+            if (document.queryCommandState && document.queryCommandState('bold')) document.execCommand('bold', false, null);
+            if (window.M13_Negrita && window.M13_Negrita.clearTypingState) window.M13_Negrita.clearTypingState();
+            if (window.M4_Caret && window.M4_Caret.updateFocus) window.M4_Caret.updateFocus(true);
+        } catch (e) {}
+    });
   }
 
   function setupBblLinkListeners(linkEl) {
