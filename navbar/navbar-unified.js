@@ -165,6 +165,7 @@ class UnifiedNavbar {
         this.lastScrollY = 0;
         this.isHidden = false;
         this.isKeyboardOpen = false;
+        this.editableFocado = false;
         this.currentPage = this.detectCurrentPage();
         this._syncRaf = 0;
         this._metricsRaf = 0;
@@ -363,6 +364,7 @@ class UnifiedNavbar {
     }
 
     keyboardOpenByViewport() {
+        if (this.editableFocado) return true;
         if (window.visualViewport) {
             return (window.innerHeight - window.visualViewport.height) > 120;
         }
@@ -394,6 +396,7 @@ class UnifiedNavbar {
         document.addEventListener('focusin', (e) => {
             const tag = e.target.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) {
+                this.editableFocado = true;
                 this.isKeyboardOpen = true;
                 this.hideNavbar('keyboard');
                 this.syncBottomMetrics();
@@ -401,6 +404,7 @@ class UnifiedNavbar {
         });
 
         document.addEventListener('focusout', () => {
+            this.editableFocado = false;
             setTimeout(sync, 60);
         });
 
