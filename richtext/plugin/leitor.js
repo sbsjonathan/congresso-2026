@@ -42,10 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const escapeRegex = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   const buildBibleRegex = () => {
-    if (!window.ABREVIACOES) return /(^|[^A-Za-zÀ-ÖØ-öø-ÿ0-9])([1-3]?\s?[A-Za-zÀ-ÖØ-öø-ÿ.]+)\s*(\d{1,3})\s*([:;])\s*([\d,\s\-–—]+(?:\s*;\s*[\d,\s\-–—]+)*)/gi;
+    if (!window.ABREVIACOES) return /(^|[^A-Za-zÀ-ÖØ-öø-ÿ0-9])([1-3]?\s?[A-Za-zÀ-ÖØ-öø-ÿ.]+)\s*(\d{1,3})\s*([:;])\s*([\d,\s\-]+(?:\s*;\s*[\d,\s\-]+)*)/gi;
     const rawKeys = Array.from(new Set(Object.keys(window.ABREVIACOES))).filter(Boolean).sort((a, b) => b.length - a.length);
     const bookPattern = rawKeys.map(key => escapeRegex(key).replace(/\s+/g, '\\s*')).join('|');
-    return new RegExp(`(^|[^A-Za-zÀ-ÖØ-öø-ÿ0-9])(${bookPattern})\\s*(\\d{1,3})\\s*([:;])\\s*([\\d,\\s\\-–—]+(?:\\s*;\\s*[\\d,\\s\\-–—]+)*)`, 'gi');
+    return new RegExp(`(^|[^A-Za-zÀ-ÖØ-öø-ÿ0-9])(${bookPattern})\\s*(\\d{1,3})\\s*([:;])\\s*([\\d,\\s\\-]+(?:\\s*;\\s*[\\d,\\s\\-]+)*)`, 'gi');
   };
 
   const REGEX_BBL = buildBibleRegex();
