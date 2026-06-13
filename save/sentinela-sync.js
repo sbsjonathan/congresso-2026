@@ -8,6 +8,8 @@ class SentinelaSync {
         this.autoSaveTimeout = null;
         this.lastSavedDataJSON = '{}';
         this.SAVE_DELAY = 2500;
+        this.loadAttempts = 0;
+        this.MAX_LOAD_ATTEMPTS = 4;
         this.init();
     }
 
@@ -30,6 +32,12 @@ class SentinelaSync {
         }
         
         this.interceptCacheSalvar();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') this.flushPendingSave();
+        });
+
+        window.addEventListener('pagehide', () => this.flushPendingSave());
     }
 
     detectSemanaEEstudo() {
@@ -57,11 +65,20 @@ class SentinelaSync {
     }
 
     scheduleAutoSave() {
-        if (!this.isLoggedIn) return;
+        if (!this.isLoggedIn || !this.initialLoadComplete) return;
         clearTimeout(this.autoSaveTimeout);
         this.autoSaveTimeout = setTimeout(() => {
             this.executeAutoSave();
         }, this.SAVE_DELAY);
+    }
+
+    flushPendingSave() {
+        if (!this.isLoggedIn || !this.initialLoadComplete) return;
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+            this.autoSaveTimeout = null;
+            this.executeAutoSave();
+        }
     }
 
     async executeAutoSave() {
@@ -87,13 +104,18 @@ class SentinelaSync {
                 return;
             }
 
+            if (Object.keys(anotacoes).length === 0 && this.lastSavedDataJSON !== '{}') {
+                this.isSyncing = false;
+                return;
+            }
+
             const result = await window.SupabaseSync.salvarSentinelaAnotacoes(
                 this.semanaAtual,
                 this.estudoId,
                 anotacoes
             );
 
-            if (result.success) {
+            if (result && result.success) {
                 this.lastSavedDataJSON = anotacoesJSON;
             }
         } catch (error) {
@@ -126,18 +148,24 @@ class SentinelaSync {
                     }
                 }
     
+                this.lastSavedDataJSON = JSON.stringify(anotacoes);
+                this.initialLoadComplete = true;
+                sessionStorage.setItem(loadFlag, 'true');
+
                 if (localChangesExist) {
-                    sessionStorage.setItem(loadFlag, 'true');
-                    this.initialLoadComplete = true;
                     location.reload();
-                } else {
-                    this.initialLoadComplete = true;
                 }
             } else {
                 this.initialLoadComplete = true;
+                sessionStorage.setItem(loadFlag, 'true');
             }
         } catch (error) {
-            this.initialLoadComplete = true;
+            this.loadAttempts++;
+            if (this.loadAttempts < this.MAX_LOAD_ATTEMPTS) {
+                setTimeout(() => this.loadFromSupabase(), 2000);
+            } else {
+                this.initialLoadComplete = true;
+            }
         }
     }
     
