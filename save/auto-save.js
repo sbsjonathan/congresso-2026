@@ -7,6 +7,7 @@ class AutoSaveManager {
         this.lastSavedContent = '';
         this.saveInProgress = false;
         this.isPaused = false;
+        this.initialLoadComplete = false;
         this.SAVE_DELAY = 350;
         this.MIN_CONTENT_LENGTH = 0;
         this.observer = null;
@@ -26,6 +27,9 @@ class AutoSaveManager {
         await this.waitForEditor();
         this.detectSemana();
         this.checkLoginStatus();
+        if (!this.isLoggedIn) {
+            this.initialLoadComplete = true;
+        }
         this.setupAutoSave();
         this.setupStructureObserver();
         this.monitorLoginChanges();
@@ -306,6 +310,7 @@ class AutoSaveManager {
     }
 
     async executeAutoSave(trigger = 'auto', isSync = false) {
+        if (!this.initialLoadComplete && this.isLoggedIn) return;
         if (this.saveInProgress) return;
         if (!this.editor || !this.currentSemana) return;
 
