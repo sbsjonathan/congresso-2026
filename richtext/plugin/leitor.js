@@ -334,7 +334,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const leitorFx = PERF_LOW ? null : createLeitorBorderFx(leitorBtn);
 
-  const enableReadOnly = ({ toastMessage = null, autoOpenRef = null, enableAura = false } = {}) => {
+  const inserirMarcadorCursor = () => {
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return false;
+      const range = sel.getRangeAt(0);
+      if (!range || !editor.contains(range.startContainer)) return false;
+      const r = range.cloneRange();
+      r.collapse(true);
+      const marker = document.createElement('span');
+      marker.setAttribute('data-bbl-caret-marker', '1');
+      marker.style.cssText = 'display:inline;width:0;height:0;padding:0;margin:0;';
+      r.insertNode(marker);
+      return true;
+    } catch (e) { return false; }
+  };
+
+  const takeNearestBblToMarker = () => {
+    const marker = editor.querySelector('[data-bbl-caret-marker]');
+    if (!marker) return null;
+    let target = null;
+    const bbls = editor.querySelectorAll('.bbl');
+    for (let i = 0; i < bbls.length; i++) {
+      if (bbls[i].compareDocumentPosition(marker) & Node.DOCUMENT_POSITION_FOLLOWING) target = bbls[i];
+      else break;
+    }
+    const parent = marker.parentNode;
+    marker.remove();
+    if (parent && parent.normalize) parent.normalize();
+    return target;
+  };
+
+  const abrirAlvoBbl = (targetSpan, refText) => {
+    if (!refText || typeof window.abrirModalBibl !== 'function') return false;
+    if (PERF_LOW) {
+      window.abrirModalBibl(refText, targetSpan || null);
+      return true;
+    }
+    if (targetSpan) {
+      targetSpan.classList.add('pressionando');
+      setTimeout(() => {
+        targetSpan.classList.remove('pressionando');
+        targetSpan.classList.add('ref-aberta');
+        setTimeout(() => { window.abrirModalBibl(refText, targetSpan); }, 150);
+        setTimeout(() => targetSpan.classList.remove('ref-aberta'), 300);
+      }, 250);
+    } else {
+      window.abrirModalBibl(refText);
+    }
+    return true;
+  };
+
+  const enableReadOnly = ({ toastMessage = null, autoOpenRef = null, autoOpenNearest = false, fallbackRef = null, enableAura = false } = {}) => {
     editor.setAttribute('contenteditable', 'false'); editor.classList.add('is-read-only');
     document.body.classList.add('leitor-keep-toolbar'); document.body.classList.add('editor-has-focus');
     window.M4_Caret?.updateFocus?.();
@@ -344,32 +395,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     waitForBible(() => {
       processAllContent();
-      if (autoOpenRef && typeof window.abrirModalBibl === 'function') {
-        if (PERF_LOW) {
-          setTimeout(() => {
-            const targetSpan = editor.querySelector(`.bbl[data-ref="${autoOpenRef}"]`);
-            window.abrirModalBibl(autoOpenRef, targetSpan); 
-          }, 80);
-        } else {
-          setTimeout(() => {
-            const targetSpan = editor.querySelector(`.bbl[data-ref="${autoOpenRef}"]`);
-            if (targetSpan) {
-              targetSpan.classList.add('pressionando');
-              setTimeout(() => {
-                targetSpan.classList.remove('pressionando');
-                targetSpan.classList.add('ref-aberta');
-                setTimeout(() => { window.abrirModalBibl(autoOpenRef, targetSpan); }, 150); 
-                setTimeout(() => targetSpan.classList.remove('ref-aberta'), 300);
-              }, 250);
-            } else {
-              window.abrirModalBibl(autoOpenRef);
-            }
-          }, 600);
+      const startDelay = PERF_LOW ? 80 : 600;
+      setTimeout(() => {
+        let opened = false;
+        if (autoOpenNearest) {
+          const nearest = takeNearestBblToMarker();
+          if (nearest) opened = abrirAlvoBbl(nearest, nearest.getAttribute('data-ref') || nearest.textContent.trim());
         }
-      }
+        if (!opened && autoOpenRef) {
+          opened = abrirAlvoBbl(editor.querySelector(`.bbl[data-ref="${autoOpenRef}"]`), autoOpenRef);
+        }
+        if (!opened && fallbackRef) {
+          opened = abrirAlvoBbl(editor.querySelector(`.bbl[data-ref="${fallbackRef}"]`), fallbackRef);
+        }
+        if (!opened && toastMessage) showToast(toastMessage);
+      }, startDelay);
     });
-
-    if (toastMessage) showToast(toastMessage);
   };
 
   const disableReadOnly = () => {
@@ -400,8 +441,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const refs = scanEditorReferences();
     if (!refs.length) { showToast('Não há versículos bíblicos'); return; }
     isReadOnly = true;
-    if (refs.length === 1) { enableReadOnly({ autoOpenRef: refs[0].text, enableAura: !PERF_LOW }); return; }
-    enableReadOnly({ toastMessage: 'Modo Bíblia', enableAura: !PERF_LOW });
+    const markerInserted = inserirMarcadorCursor();
+    enableReadOnly({
+      enableAura: !PERF_LOW,
+      autoOpenNearest: markerInserted,
+      fallbackRef: refs.length === 1 ? refs[0].text : null,
+      toastMessage: refs.length === 1 ? null : 'Modo Bíblia'
+    });
   };
 
   const processAllContent = () => {
