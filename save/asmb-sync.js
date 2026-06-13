@@ -7,6 +7,8 @@ class AssembleiaSync {
         this.autoSaveTimeout = null;
         this.lastSavedDataJSON = '{}';
         this.SAVE_DELAY = 2500;
+        this.loadAttempts = 0;
+        this.MAX_LOAD_ATTEMPTS = 4;
         this.init();
     }
 
@@ -43,6 +45,12 @@ class AssembleiaSync {
                 this.scheduleAutoSave();
             }
         });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') this.flushPendingSave();
+        });
+
+        window.addEventListener('pagehide', () => this.flushPendingSave());
     }
 
     detectAno() {
@@ -54,18 +62,27 @@ class AssembleiaSync {
     }
 
     scheduleAutoSave() {
-        if (!this.isLoggedIn) return;
+        if (!this.isLoggedIn || !this.initialLoadComplete) return;
         clearTimeout(this.autoSaveTimeout);
         this.autoSaveTimeout = setTimeout(() => {
             this.executeAutoSave();
         }, this.SAVE_DELAY);
     }
 
+    flushPendingSave() {
+        if (!this.isLoggedIn || !this.initialLoadComplete) return;
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+            this.autoSaveTimeout = null;
+            this.executeAutoSave();
+        }
+    }
+
     collectAnnotationsFromLocalStorage() {
         const anotacoes = {};
         const prefixo = `${this.ano}-`;
         const prefs = ['tema-interface', 'tamanho-fonte-global', 'editor-performance-mode', 'cor-sex', 'cor-sab', 'cor-dom'];
-        
+
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key.startsWith(prefixo) || prefs.includes(key)) {
@@ -96,9 +113,14 @@ class AssembleiaSync {
                 return;
             }
 
+            if (Object.keys(anotacoes).length === 0 && this.lastSavedDataJSON !== '{}') {
+                this.isSyncing = false;
+                return;
+            }
+
             const result = await window.SupabaseSync.salvarAssembleiaAnotacoes(this.ano, anotacoes);
 
-            if (result.success) {
+            if (result && result.success) {
                 this.lastSavedDataJSON = anotacoesJSON;
             }
         } catch (error) {
@@ -126,7 +148,7 @@ class AssembleiaSync {
                 let localChangesExist = false;
                 let prefsChanged = false;
                 const prefs = ['tema-interface', 'tamanho-fonte-global', 'editor-performance-mode', 'cor-sex', 'cor-sab', 'cor-dom'];
-                
+
                 for (const [key, value] of Object.entries(anotacoes)) {
                     if (localStorage.getItem(key) !== value) {
                         localStorage.setItem(key, value);
@@ -135,29 +157,36 @@ class AssembleiaSync {
                     }
                 }
 
+                this.lastSavedDataJSON = JSON.stringify(anotacoes);
+                this.initialLoadComplete = true;
+                sessionStorage.setItem(loadFlag, 'true');
+
                 if (localChangesExist || force) {
-                    sessionStorage.setItem(loadFlag, 'true');
-                    this.initialLoadComplete = true;
                     if (prefsChanged) {
                         location.reload();
-                    } else if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
+                        return;
+                    }
+                    if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
                         window.AssembleiaClickables.refresh();
                     } else {
                         location.reload();
+                        return;
                     }
-                } else {
-                    this.initialLoadComplete = true;
-                }
-            } else if (force) {
-                this.initialLoadComplete = true;
-                if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
-                    window.AssembleiaClickables.refresh();
                 }
             } else {
                 this.initialLoadComplete = true;
+                sessionStorage.setItem(loadFlag, 'true');
+                if (force && window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
+                    window.AssembleiaClickables.refresh();
+                }
             }
         } catch (error) {
-            this.initialLoadComplete = true;
+            this.loadAttempts++;
+            if (this.loadAttempts < this.MAX_LOAD_ATTEMPTS) {
+                setTimeout(() => this.loadFromSupabase(force), 2000);
+            } else {
+                this.initialLoadComplete = true;
+            }
         }
     }
 }
