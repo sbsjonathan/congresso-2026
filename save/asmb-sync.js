@@ -3,6 +3,7 @@ class AssembleiaSync {
         this.ano = null;
         this.isLoggedIn = false;
         this.isSyncing = false;
+        this.initialLoadComplete = false;
         this.autoSaveTimeout = null;
         this.lastSavedDataJSON = '{}';
         this.SAVE_DELAY = 2500;
@@ -23,6 +24,8 @@ class AssembleiaSync {
 
         if (this.isLoggedIn) {
             this.loadFromSupabase();
+        } else {
+            this.initialLoadComplete = true;
         }
 
         window.addEventListener('assembleia:recordchange', () => {
@@ -40,8 +43,6 @@ class AssembleiaSync {
                 this.scheduleAutoSave();
             }
         });
-
-        setTimeout(() => this.scheduleAutoSave(), 3000);
     }
 
     detectAno() {
@@ -75,6 +76,8 @@ class AssembleiaSync {
     }
 
     async executeAutoSave() {
+        if (!this.initialLoadComplete) return;
+
         if (!window.SupabaseSync || typeof window.SupabaseSync.salvarAssembleiaAnotacoes !== 'function') {
             this.scheduleAutoSave();
             return;
@@ -111,7 +114,10 @@ class AssembleiaSync {
         }
 
         const loadFlag = `asmb_loaded_${this.ano}`;
-        if (!force && sessionStorage.getItem(loadFlag)) return;
+        if (!force && sessionStorage.getItem(loadFlag)) {
+            this.initialLoadComplete = true;
+            return;
+        }
 
         try {
             const anotacoes = await window.SupabaseSync.carregarAssembleiaAnotacoes(this.ano);
@@ -131,6 +137,7 @@ class AssembleiaSync {
 
                 if (localChangesExist || force) {
                     sessionStorage.setItem(loadFlag, 'true');
+                    this.initialLoadComplete = true;
                     if (prefsChanged) {
                         location.reload();
                     } else if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
@@ -138,13 +145,19 @@ class AssembleiaSync {
                     } else {
                         location.reload();
                     }
+                } else {
+                    this.initialLoadComplete = true;
                 }
             } else if (force) {
+                this.initialLoadComplete = true;
                 if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
                     window.AssembleiaClickables.refresh();
                 }
+            } else {
+                this.initialLoadComplete = true;
             }
         } catch (error) {
+            this.initialLoadComplete = true;
         }
     }
 }
