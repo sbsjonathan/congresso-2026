@@ -169,6 +169,9 @@ body.zombie-toolbar-active .editor-scroll {
 .children[hidden] { display: none !important; }
 ::selection { background: rgba(0, 122, 255, 0.23); }
 [data-theme="dark"] ::selection { background: rgba(10, 132, 255, 0.35); }
+
+.versiculo-ref { color: #007AFF; font-weight: 700; }
+[data-theme="dark"] .versiculo-ref { color: #0A84FF; }
 .shake { animation: shake .4s cubic-bezier(.36,.07,.19,.97) both; }
 
 @keyframes shake {

@@ -459,10 +459,6 @@ const M11_Layout = {
     const vv = window.visualViewport;
     if (!vv) return;
     
-    // A MÁGICA: No iOS PWA, ao fechar o teclado, o visualViewport.height 
-    // pode vir encurtado, causando o Navbar a flutuar num falso chão.
-    // Comparamos com a tela inteira (innerHeight). Se for perto, o teclado
-    // fechou, então damos "100%" pro Navbar colar no chão de verdade.
     const isKeyboardOpen = (window.innerHeight - vv.height) > 100;
     
     if (isKeyboardOpen) {
@@ -1000,8 +996,9 @@ const M10_EditorEvents = {
 
         const restoreFormat = targetEditable => {
           if (shouldResetForFreshParagraph(targetEditable)) return;
-          if (formatState.b) document.execCommand('bold', false, null);
-          if (formatState.i) document.execCommand('italic', false, null);
+          try { targetEditable.focus({ preventScroll: true }); } catch (_) { try { targetEditable.focus(); } catch (e2) {} }
+          if (safeQueryState('bold')) document.execCommand('bold', false, null);
+          if (safeQueryState('italic')) document.execCommand('italic', false, null);
           if (formatState.u) document.execCommand('underline', false, null);
           if (formatState.fore && formatState.fore !== 'transparent' && formatState.fore !== 'rgba(0, 0, 0, 0)') {
             document.execCommand('foreColor', false, formatState.fore);
@@ -1011,6 +1008,8 @@ const M10_EditorEvents = {
               document.execCommand('backColor', false, formatState.back);
             }
           }
+          window.M13_Negrita?.clearTypingState?.();
+          requestAnimationFrame(() => window.M13_Negrita?.syncButtons?.());
         };
 
         const resetFormatForFreshParagraph = targetEditable => {
@@ -1066,12 +1065,30 @@ const M10_EditorEvents = {
             M4_Caret.place(targetEditable);
             finalizeParagraphTransition(targetEditable);
           } else {
+            const range = M2_Query.curRange();
+            let extracted = null;
+            if (range && ed.contains(range.startContainer)) {
+              const r = document.createRange();
+              r.setStart(range.startContainer, range.startOffset);
+              r.setEnd(ed, ed.childNodes.length);
+              extracted = r.extractContents();
+            }
+
             const n = M5_Factory.toggle('', M2_Query.getLvl(t));
             M7_Actions.insAfter(t, n);
             M7_Actions.anim(n);
-            M3_TextModel.syncAll();
+
             const targetEditable = M2_Query.getTit(n);
-            M4_Caret.place(targetEditable);
+            if (extracted) {
+              targetEditable.innerHTML = '';
+              targetEditable.appendChild(extracted);
+            }
+
+            M3_TextModel.sync(ed);
+            M3_TextModel.sync(targetEditable);
+            M3_TextModel.syncAll();
+            
+            M4_Caret.place(targetEditable, true);
             finalizeParagraphTransition(targetEditable);
           }
         } else if (ed.classList.contains('text-content') || ed.classList.contains('paragraph-content')) {
@@ -1113,12 +1130,30 @@ const M10_EditorEvents = {
               M11_Layout.run();
             } else {
               const cur = M2_Query.curNode();
+              const range = M2_Query.curRange();
+              let extracted = null;
+              if (range && ed.contains(range.startContainer)) {
+                const r = document.createRange();
+                r.setStart(range.startContainer, range.startOffset);
+                r.setEnd(ed, ed.childNodes.length);
+                extracted = r.extractContents();
+              }
+
               const p = M5_Factory.para();
               M7_Actions.insAfter(cur, p);
               M7_Actions.anim(p);
-              M3_TextModel.syncAll();
+
               const targetEditable = M2_Query.getParC(p);
-              M4_Caret.place(targetEditable);
+              if (extracted) {
+                targetEditable.innerHTML = '';
+                targetEditable.appendChild(extracted);
+              }
+
+              M3_TextModel.sync(ed);
+              M3_TextModel.sync(targetEditable);
+              M3_TextModel.syncAll();
+              
+              M4_Caret.place(targetEditable, true);
               finalizeParagraphTransition(targetEditable);
             }
           }

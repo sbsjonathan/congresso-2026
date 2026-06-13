@@ -30,13 +30,13 @@ class AssembleiaSync {
         });
 
         document.addEventListener('input', (e) => {
-            if (e.target.closest('.clickable-asmb') || e.target.closest('.editor')) {
+            if (e.target.closest('.clickable-asmb') || e.target.closest('.editor') || e.target.closest('.assistencia-input')) {
                 this.scheduleAutoSave();
             }
         });
 
         document.addEventListener('focusout', (e) => {
-            if (e.target.closest('.clickable-asmb') || e.target.closest('.editor')) {
+            if (e.target.closest('.clickable-asmb') || e.target.closest('.editor') || e.target.closest('.assistencia-input')) {
                 this.scheduleAutoSave();
             }
         });
@@ -63,10 +63,11 @@ class AssembleiaSync {
     collectAnnotationsFromLocalStorage() {
         const anotacoes = {};
         const prefixo = `${this.ano}-`;
+        const prefs = ['tema-interface', 'tamanho-fonte-global', 'editor-performance-mode', 'cor-sex', 'cor-sab', 'cor-dom'];
         
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key.startsWith(prefixo)) {
+            if (key.startsWith(prefixo) || prefs.includes(key)) {
                 anotacoes[key] = localStorage.getItem(key);
             }
         }
@@ -117,17 +118,22 @@ class AssembleiaSync {
 
             if (anotacoes && Object.keys(anotacoes).length > 0) {
                 let localChangesExist = false;
+                let prefsChanged = false;
+                const prefs = ['tema-interface', 'tamanho-fonte-global', 'editor-performance-mode', 'cor-sex', 'cor-sab', 'cor-dom'];
                 
                 for (const [key, value] of Object.entries(anotacoes)) {
                     if (localStorage.getItem(key) !== value) {
                         localStorage.setItem(key, value);
                         localChangesExist = true;
+                        if (prefs.includes(key)) prefsChanged = true;
                     }
                 }
 
                 if (localChangesExist || force) {
                     sessionStorage.setItem(loadFlag, 'true');
-                    if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
+                    if (prefsChanged) {
+                        location.reload();
+                    } else if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
                         window.AssembleiaClickables.refresh();
                     } else {
                         location.reload();

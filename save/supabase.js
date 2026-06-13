@@ -227,6 +227,48 @@ class SupabaseSync {
             return { success: false, error: error.message };
         }
     }
+
+    async apagarAssembleiaCompleto(ano) {
+        await this.ensureInitialized();
+        this.checkExistingSession();
+        if (!this.currentUser) return { success: false, error: 'Não conectado' };
+        if (!this.isOnline) return { success: false, error: 'Sem conexão com a internet' };
+
+        try {
+            const tipo = `assembleia_${ano}`;
+            const { error } = await this.supabase.from('richtext_anotacoes').delete().eq('usuario_id', this.currentUser.id).eq('tipo', tipo);
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    async apagarAssembleiaDia(ano, dia) {
+        await this.ensureInitialized();
+        this.checkExistingSession();
+        if (!this.currentUser) return { success: false, error: 'Não conectado' };
+        if (!this.isOnline) return { success: false, error: 'Sem conexão com a internet' };
+
+        try {
+            const tipo = `assembleia_${ano}`;
+            const { data: existing } = await this.supabase.from('richtext_anotacoes').select('id, conteudo_html').eq('usuario_id', this.currentUser.id).eq('tipo', tipo).maybeSingle();
+            if (!existing) return { success: true, removidos: 0 };
+
+            let obj = {};
+            try { obj = JSON.parse(existing.conteudo_html) || {}; } catch (e) { obj = {}; }
+
+            const prefixo = `${ano}-${dia}-`;
+            let removidos = 0;
+            Object.keys(obj).forEach(k => { if (k.startsWith(prefixo)) { delete obj[k]; removidos++; } });
+
+            const { error } = await this.supabase.from('richtext_anotacoes').update({ conteudo_html: JSON.stringify(obj) }).eq('id', existing.id);
+            if (error) throw error;
+            return { success: true, removidos };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
 }
 
 if (typeof window.SupabaseSync === 'undefined') {

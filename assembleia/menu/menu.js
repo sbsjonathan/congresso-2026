@@ -437,7 +437,26 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    function executeSyncCall(tab, option, day) {
+    async function executeSyncCall(tab, option, day) {
+       if (tab === 'apagar') {
+         if (!window.SupabaseSync || typeof window.SupabaseSync.apagarAssembleiaCompleto !== 'function') {
+           alert('Nuvem indisponível no momento. Tente novamente.');
+           return;
+         }
+         const year = document.documentElement.dataset.programYear || '2026';
+         let result;
+         if (option === 'all') {
+           result = await window.SupabaseSync.apagarAssembleiaCompleto(year);
+         } else {
+           result = await window.SupabaseSync.apagarAssembleiaDia(year, day);
+         }
+         if (result && result.success) {
+           alert('Dados da nuvem apagados com sucesso.');
+         } else {
+           alert('Não foi possível apagar: ' + ((result && result.error) || 'erro desconhecido'));
+         }
+         return;
+       }
        console.log(`[Sync Request] Aba: ${tab}, Opção: ${option}, Dia: ${day}`);
        alert(`Ação: ${tab} -> ${option} acionada com sucesso! (Lógica backend a implementar).`);
     }

@@ -77,11 +77,11 @@
                 <div class="assistencia-header">Assistência</div>
                 <div class="assistencia-row">
                   <span class="assistencia-label">MANHÃ:</span>
-                  <input type="text" class="assistencia-input" id="${idManha}" placeholder="Assistência da manhã">
+                  <input type="text" class="assistencia-input" id="${idManha}" placeholder="Insira aqui a assistência da manhã">
                 </div>
                 <div class="assistencia-row">
                   <span class="assistencia-label">TARDE:</span>
-                  <input type="text" class="assistencia-input" id="${idTarde}" placeholder="Assistência da tarde">
+                  <input type="text" class="assistencia-input" id="${idTarde}" placeholder="Insira aqui a assistência da tarde">
                 </div>
               </div>
               <hr class="info-panel-divider">

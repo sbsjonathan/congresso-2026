@@ -1,7 +1,7 @@
 {
-  "name": "Reunião de Domingo",
-  "short_name": "Reunião",
-  "description": "App de anotações para as reuniões",
+  "name": "Congresso",
+  "short_name": "Congresso",
+  "description": "App de anotações para o congresso",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f7fa",
@@ -25,6 +25,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

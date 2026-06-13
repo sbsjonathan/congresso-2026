@@ -798,6 +798,118 @@
     try { localStorage.removeItem(id); return true; } catch { return false; }
   }
 
+  // --- O NOVO AGENTE DE PONTOS ALTOS ---
+  window.AssembleiaIA = window.AssembleiaIA || {};
+  
+  window.AssembleiaIA.gerarPontosAltosDia = async function(dia, wrapperElement, idRespostaIA) {
+      const respostaDiv = document.getElementById(idRespostaIA);
+      if (!respostaDiv) return;
+      if (!CONFIG.enabled || !isConfigured()) {
+          respostaDiv.innerHTML = '<span style="color:#b91c1c;">Configure o Worker da IA.</span>';
+          return;
+      }
+
+      let textoTotal = '';
+
+      // Lê a raiz pura de todos os editores do dia usando readRecord (ignora a interface gráfica)
+      document.querySelectorAll('.clickable-asmb[data-id]').forEach(editor => {
+          const id = editor.dataset.id;
+          const record = readRecord(id);
+          
+          if (record && record.fullText && record.fullText.length > 5) {
+              textoTotal += record.fullText + '\n\n';
+          }
+      });
+
+      if (textoTotal.trim().length < 15) {
+          respostaDiv.innerHTML = '<span style="color: var(--text-muted, #9ca3af);">Aguardando suas anotações do dia para gerar os pontos altos.</span>';
+          return;
+      }
+
+      wrapperElement.classList.add('ia-loading');
+      respostaDiv.innerHTML = '<span style="color: var(--text-muted, #6b7280);">✨ Analisando suas anotações do dia...</span>';
+
+      try {
+          let nomeIrmao = '';
+          try {
+              const userRaw = localStorage.getItem('supabase_user');
+              if (userRaw) {
+                  const user = JSON.parse(userRaw);
+                  let nomeFull = user.nome || user.usuario || '';
+                  if (nomeFull) {
+                      nomeIrmao = nomeFull.trim().split(' ')[0];
+                      if (nomeIrmao) {
+                          nomeIrmao = nomeIrmao.charAt(0).toUpperCase() + nomeIrmao.slice(1).toLowerCase();
+                      }
+                  }
+              }
+          } catch(e) {
+              console.error("Erro ao ler usuário:", e);
+          }
+
+          const rotulos = { 'sex': 'Sexta-feira', 'sab': 'Sábado', 'dom': 'Domingo' };
+          const nomeDia = rotulos[dia] || 'hoje';
+          const saudacao = nomeIrmao ? `Comece com uma saudação calorosa chamando o usuário pelo nome (${nomeIrmao}) (ex: "A ${nomeDia} foi um dia incrível, ${nomeIrmao}!").` : `Comece com uma saudação calorosa sobre a ${nomeDia}.`;
+
+          const prompt = [
+              `Você é um amigo cristão conversando no fim da ${nomeDia} de congresso.`,
+              `Com base APENAS nas anotações feitas pelo usuário abaixo, faça um resumo de 1 ou 2 parágrafos com os pontos altos do dia.`,
+              saudacao,
+              `Use linguagem natural, amorosa, clara e edificante. Retorne APENAS um JSON válido.`,
+              `Esquema JSON obrigatório:`,
+              `{ "pontos_altos": "Texto do resumo..." }`,
+              ``,
+              `ANOTAÇÕES DO DIA:`,
+              textoTotal
+          ].join('\n');
+
+          const models = getModelQueue();
+          const workerUrl = String(CONFIG.workerUrl || '').trim().replace(/\/$/, '');
+          
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), CONFIG.timeoutMs);
+          
+          const response = await fetch(workerUrl, {
+              method: 'POST',
+              signal: controller.signal,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  prompt,
+                  isJson: true,
+                  models,
+                  generationConfig: { temperature: 0.6, topP: 0.9, topK: 40, maxOutputTokens: 1024 }
+              })
+          });
+          clearTimeout(timeout);
+
+          const data = await response.json().catch(()=>({}));
+          if (!response.ok) throw new Error(data?.error || 'Erro na API');
+          if (!data.text) throw new Error('Retorno vazio');
+
+          let parsed;
+          try {
+              const cleaned = data.text.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+              parsed = JSON.parse(cleaned);
+          } catch(e) {
+              throw new Error('Falha ao processar o formato da resposta.');
+          }
+
+          const resumo = parsed.pontos_altos || parsed.PontosAltos || parsed.pontosAltos || '';
+          if (!resumo) throw new Error('Resumo vazio.');
+
+          const htmlFinal = textToHTML(resumo) + (data.model && typeof window.DEBUG_G !== 'undefined' ? `<div style="font-size:0.75rem; color:#166534; margin-top:8px;">Modelo: ${escapeHTML(data.model)}</div>` : '');
+          respostaDiv.innerHTML = htmlFinal;
+
+          localStorage.setItem(idRespostaIA, htmlFinal);
+          window.dispatchEvent(new CustomEvent('assembleia:recordchange'));
+
+      } catch(error) {
+          respostaDiv.innerHTML = `<span style="color:#b91c1c;">Falha ao gerar os pontos altos: ${escapeHTML(error.message)}</span>`;
+      } finally {
+          wrapperElement.classList.remove('ia-loading');
+      }
+  };
+
   dbg.log('ia:init', {
     enabled: CONFIG.enabled,
     model: CONFIG.model,
@@ -810,7 +922,7 @@
   });
 
   window.ASSEMBLEIA_IA_CONFIG = CONFIG;
-  window.AssembleiaIA = {
+  window.AssembleiaIA = Object.assign(window.AssembleiaIA || {}, {
     config: CONFIG,
     createRecord,
     readRecord,
@@ -831,5 +943,5 @@
     clearRecord,
     isConfigured,
     prepareInputText
-  };
+  });
 })();

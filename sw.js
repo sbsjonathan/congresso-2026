@@ -1,4 +1,4 @@
-const APP_VERSION = 'v6';
+const APP_VERSION = 'v7';
 const CACHE_APP = 'sentinela-app-' + APP_VERSION;
 const CACHE_BIBLE = 'sentinela-bible-v1';
 const CACHE_RUNTIME = 'sentinela-runtime-' + APP_VERSION;

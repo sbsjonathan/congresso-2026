@@ -96,40 +96,45 @@
 
     if (paragrafos.length === 0) return;
 
-    // 1. Coleta o HTML dos parágrafos, removendo as tags <br> para fluir naturalmente com o texto.
+    const tituloEl = corpo.querySelector('h3');
+    let refCanonica = tituloEl ? tituloEl.textContent.trim() : '';
+    if (!refCanonica || /carregando|erro|inv[aá]lid/i.test(refCanonica)) {
+      refCanonica = lastClickedBbl.textContent.trim();
+    }
+
     let versosHtml = [];
     paragrafos.forEach(p => versosHtml.push(p.innerHTML.trim()));
-    let textoLimpo = versosHtml.join(' ').replace(/<br\s*\/?>/gi, ' ');
+    let textoLimpo = versosHtml.join(' ').replace(/<br\s*\/?>/gi, ' ').replace(/\s+/g, ' ').trim();
 
-    // 2. Monta o texto no formato desejado: "— texto_em_itálico"
-    let htmlToInject = ` <i>— ${textoLimpo}</i>`;
-
-    // 3. Acha a caixa de texto onde o link clicado está
     const editable = lastClickedBbl.closest('.editable');
     if (!editable) return;
 
-    // 4. Salva o estado no histórico para o botão Desfazer funcionar
+    const innerHtml = `<b class="versiculo-ref">${refCanonica}</b> — <i class="versiculo-transc">${textoLimpo}</i>`;
+    const blocoExistente = lastClickedBbl.closest('.versiculo-bloco');
+
     if (window.M12_History && window.M12_History.beforeChange) window.M12_History.beforeChange();
 
-    // 5. Injeta o texto LOGO APÓS o link clicado (na mesma estrutura/parágrafo)
-    lastClickedBbl.insertAdjacentHTML('afterend', htmlToInject);
+    if (blocoExistente) {
+        blocoExistente.innerHTML = innerHtml;
+    } else {
+        const bloco = document.createElement('span');
+        bloco.className = 'versiculo-bloco';
+        bloco.innerHTML = innerHtml;
+        lastClickedBbl.replaceWith(bloco);
+    }
 
-    // 6. Sincroniza o modelo de texto com a nova inserção
     if (typeof M3_TextModel !== 'undefined') {
         M3_TextModel.sync(editable);
         M3_TextModel.syncAll();
     }
-    
-    // 7. Atualiza o histórico
+
     if (window.M12_History && window.M12_History.afterChange) window.M12_History.afterChange(2);
 
-    // 8. Dispara o evento de 'input' para forçar o Auto-Save
     const editor = document.getElementById('editor');
     if (editor) {
         editor.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    // 9. Fecha o modal para o usuário continuar a leitura/edição
     fecharModal();
   }
 
