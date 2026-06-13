@@ -236,6 +236,7 @@ class UnifiedLoadManager {
 
             if (!supabaseContent || !supabaseContent.trim()) {
                 this.showFeedback('Salvo localmente', 'local');
+                if (window.AutoSaveManager) window.AutoSaveManager.initialLoadComplete = true;
                 return;
             }
 
@@ -275,6 +276,8 @@ class UnifiedLoadManager {
             }
         } catch (e) {
             this.showFeedback('❌ Erro de Sincronização', 'error');
+        } finally {
+            if (window.AutoSaveManager) window.AutoSaveManager.initialLoadComplete = true;
         }
     }
 
@@ -284,6 +287,7 @@ class UnifiedLoadManager {
                 const wasLoggedIn = this.isLoggedIn;
                 this.checkLoginStatus();
                 if (!wasLoggedIn && this.isLoggedIn) {
+                    if (window.AutoSaveManager) window.AutoSaveManager.initialLoadComplete = false;
                     this.syncWithSupabase();
                 }
             }
