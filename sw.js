@@ -1,4 +1,4 @@
-const APP_VERSION = 'v11';
+const APP_VERSION = 'v12';
 const CACHE_APP = 'sentinela-app-' + APP_VERSION;
 const CACHE_BIBLE = 'sentinela-bible-v1';
 const CACHE_RUNTIME = 'sentinela-runtime-v1';
@@ -31,6 +31,12 @@ const APP_FILES = [
     'main.js',
     'manifest.json',
     'assets/icons/app-icon.svg',
+    'assets/icons/apple-touch-icon.png',
+    'assets/icons/favicon-32.png',
+    'assets/icons/icon-192.png',
+    'assets/icons/icon-512.png',
+    'assets/icons/maskable-icon-512.png',
+    'assets/icons/icon-1024.png',
     'navbar/navbar-unified.css',
     'navbar/navbar-unified.js',
     'navbar/network-sensor.js',
