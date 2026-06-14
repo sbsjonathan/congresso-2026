@@ -52,6 +52,7 @@
             --bg-error: #fee2e2;
             --text-error: #991b1b;
             --border-error: #ef4444;
+            --card-offline: #f8fafc;
         }
 
         [data-theme="dark"] {
@@ -71,6 +72,7 @@
             --bg-error: rgba(239, 68, 68, 0.15);
             --text-error: #f87171;
             --border-error: rgba(239, 68, 68, 0.3);
+            --card-offline: #2c2c2e;
         }
 
         html, body {
@@ -347,14 +349,42 @@
             padding-top: 25px;
             border-top: 1px solid var(--border-input);
         }
+        
+        .offline-card {
+            background: var(--card-offline);
+            border: 1px solid var(--border-input);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .offline-icon {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .offline-title {
+            color: var(--text-title);
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+        }
+        
+        .offline-desc {
+            color: var(--text-subtitle);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin: 0 0 16px 0;
+        }
 
         .progress-bar-container {
             width: 100%;
-            height: 6px;
+            height: 8px;
             background: var(--border-input);
             border-radius: 4px;
             overflow: hidden;
-            margin: 12px 0;
+            margin: 16px 0;
             display: none;
         }
 
@@ -366,21 +396,53 @@
         }
 
         .progress-text {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-subtitle);
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            font-weight: 600;
             display: none;
         }
 
-        .btn-danger {
-            background: var(--cor-erro);
+        .btn-offline-action {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+            background: var(--text-title);
+            color: var(--bg-container);
+        }
+        
+        .btn-offline-action:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-offline-action.is-ready {
+            background: var(--cor-sucesso);
             color: white;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
         }
 
-        .btn-danger:active {
-            background: #dc2626;
+        .btn-offline-danger {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: 1px solid var(--border-input);
+            background: transparent;
+            color: var(--cor-erro);
+            cursor: pointer;
+            display: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-offline-danger:active {
+            background: var(--bg-error);
         }
     </style>
 </head>
@@ -497,20 +559,23 @@
             </div>
 
             <div class="offline-section">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <div style="font-size: 1.8rem; margin-bottom: 5px;">✈️</div>
-                    <h3 style="color: var(--text-title); margin: 0; font-size: 1.1rem;">Modo Offline</h3>
-                    <p style="color: var(--text-subtitle); font-size: 0.85rem; margin-top: 5px;">Baixe a Bíblia, App e a Sentinela da semana para ler sem internet.</p>
-                </div>
-                
-                <div class="progress-bar-container" id="offline-progress-container">
-                    <div class="progress-bar-fill" id="offline-progress-fill"></div>
-                </div>
-                <div class="progress-text" id="offline-progress-text">0%</div>
+                <div class="offline-card">
+                    <div class="offline-icon" id="offline-icon">🌐</div>
+                    <h3 class="offline-title" id="offline-title">Modo Offline</h3>
+                    <p class="offline-desc" id="offline-desc">A Bíblia e a Sentinela estarão com você, mesmo sem internet.</p>
+                    
+                    <div class="progress-bar-container" id="offline-progress-container">
+                        <div class="progress-bar-fill" id="offline-progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="offline-progress-text">0%</div>
 
-                <button class="btn btn-secondary" id="btn-offline-toggle">
-                    ⬇️ Baixar App para Modo Offline
-                </button>
+                    <button class="btn-offline-action" id="btn-offline-toggle">
+                        Baixar App Inteiro
+                    </button>
+                    <button class="btn-offline-danger" id="btn-offline-clear">
+                        Apagar dados offline
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -641,6 +706,10 @@
                 const semana = urlParams.get('semana');
                 if (semana) return semana;
                 
+                if (typeof window.getGlobalWeek === 'function') {
+                    return window.getGlobalWeek();
+                }
+                
                 const hoje = new Date();
                 const dia = hoje.getDay();
                 const diff = dia === 0 ? -6 : 1 - dia;
@@ -688,8 +757,8 @@
             }
 
             async handleLogin() {
-                if (!navigator.onLine) {
-                    this.showError('Sem conexão com a internet.');
+                if (document.body.classList.contains('is-offline')) {
+                    this.showError('Sem conexão real com a internet.');
                     return;
                 }
                 const usuario = document.getElementById('login-usuario').value.trim();
@@ -723,8 +792,8 @@
             }
 
             async handleRegister() {
-                if (!navigator.onLine) {
-                    this.showError('Sem conexão com a internet.');
+                if (document.body.classList.contains('is-offline')) {
+                    this.showError('Sem conexão real com a internet.');
                     return;
                 }
                 const usuario = document.getElementById('register-usuario').value.trim();
