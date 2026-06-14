@@ -1,9 +1,10 @@
-// ATENÇÃO: APP_VERSION subiu para forçar a substituição no iPhone
-const APP_VERSION = 'v9'; 
+const APP_VERSION = 'v11';
 const CACHE_APP = 'sentinela-app-' + APP_VERSION;
 const CACHE_BIBLE = 'sentinela-bible-v1';
 const CACHE_RUNTIME = 'sentinela-runtime-v1';
-const KEEP_CACHES = [CACHE_APP, CACHE_BIBLE, CACHE_RUNTIME];
+const CACHE_FLAG = 'sentinela-flag';
+const FLAG_URL = 'https://flag.local/download-feito';
+const KEEP_CACHES = [CACHE_APP, CACHE_BIBLE, CACHE_RUNTIME, CACHE_FLAG];
 
 const RUNTIME_HOSTS = [
     'fonts.googleapis.com',
@@ -14,7 +15,15 @@ const RUNTIME_HOSTS = [
 ];
 
 const NETWORK_ONLY_HOSTS = ['supabase.co', 'workers.dev'];
-const MAX_RUNTIME_ITEMS = 60;
+
+const RUNTIME_KEEP = [
+    'swiper-bundle.min.js',
+    'swiper-bundle.min.css',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com'
+];
+
+const MAX_RUNTIME_ITEMS = 80;
 
 const APP_FILES = [
     '',
@@ -166,30 +175,63 @@ function hostMatches(url, hosts) {
     return false;
 }
 
+function isProtectedRuntime(request) {
+    const u = request.url;
+    for (let i = 0; i < RUNTIME_KEEP.length; i++) {
+        if (u.indexOf(RUNTIME_KEEP[i]) !== -1) return true;
+    }
+    return false;
+}
+
 async function pruneCache(cacheName, maxItems) {
     try {
         const cache = await caches.open(cacheName);
         const keys = await cache.keys();
-        if (keys.length > maxItems) {
-            for (let i = 0; i < keys.length - maxItems; i++) {
-                await cache.delete(keys[i]);
-            }
+        const removable = keys.filter((k) => !isProtectedRuntime(k));
+        const excess = keys.length - maxItems;
+        for (let i = 0; i < excess && i < removable.length; i++) {
+            await cache.delete(removable[i]);
         }
     } catch (e) {}
 }
 
+async function setFlag() {
+    try {
+        const cache = await caches.open(CACHE_FLAG);
+        await cache.put(FLAG_URL, new Response('1'));
+    } catch (e) {}
+}
+
+async function clearFlag() {
+    try {
+        await caches.delete(CACHE_FLAG);
+    } catch (e) {}
+}
+
+async function hasFlag() {
+    try {
+        const cache = await caches.open(CACHE_FLAG);
+        return !!(await cache.match(FLAG_URL));
+    } catch (e) {
+        return false;
+    }
+}
+
 async function staleWhileRevalidate(req, cacheName) {
     const cache = await caches.open(cacheName);
-    const cachedRes = await cache.match(req);
-    
-    const fetchPromise = fetch(req).then(networkRes => {
+    const cachedRes = await cache.match(req, { ignoreSearch: true });
+
+    const fetchPromise = fetch(req).then((networkRes) => {
         if (networkRes && networkRes.ok) {
-            cache.put(req, networkRes.clone());
+            cache.put(req, networkRes.clone()).catch(() => {});
         }
         return networkRes;
-    }).catch(() => {});
+    }).catch(() => null);
 
-    return cachedRes || fetchPromise || new Response(offlinePage(), {
+    if (cachedRes) return cachedRes;
+    const net = await fetchPromise;
+    if (net) return net;
+    return new Response(offlinePage(), {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
@@ -222,20 +264,17 @@ self.addEventListener('fetch', (event) => {
     if (hostMatches(url, NETWORK_ONLY_HOSTS)) return;
 
     const sameOrigin = url.origin === self.location.origin;
-    
-    // BÍBLIA e IMAGENS: Cache First (não mudam)
-    if (sameOrigin && (url.pathname.includes('/biblia/') || url.pathname.includes('/imagem/semanas/'))) {
+
+    if (sameOrigin && (url.pathname.indexOf('/biblia/') !== -1 || url.pathname.indexOf('/imagem/semanas/') !== -1)) {
         event.respondWith(cacheFirst(req, CACHE_BIBLE));
         return;
     }
 
-    // ARQUIVOS DO APP: Stale-While-Revalidate (atualiza no fundo invisível)
     if (sameOrigin) {
         event.respondWith(staleWhileRevalidate(req, CACHE_APP));
         return;
     }
 
-    // FONTES E CDNs: Cache First com limpeza automática (Pruning)
     if (hostMatches(url, RUNTIME_HOSTS)) {
         event.respondWith(cacheFirst(req, CACHE_RUNTIME));
         return;
@@ -247,9 +286,10 @@ function offlinePage() {
         + '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">'
         + '<title>Sem conexão</title><style>body{margin:0;min-height:100dvh;display:flex;'
         + 'align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,sans-serif;'
-        + 'background:#f5f7fa;color:#1f2937;text-align:center;padding:24px}div{max-width:320px;background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.05)}'
+        + 'background:#f5f7fa;color:#1f2937;text-align:center;padding:24px}'
+        + 'div{max-width:320px;background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.05)}'
         + 'h1{font-size:20px;margin:0 0 10px;color:#375255}p{font-size:15px;color:#6b7280;line-height:1.5;margin:0}</style></head>'
-        + '<body><div><h1>Página Offline</h1><p>Conecte-se à internet e acesse "Salvar > Modo Offline" para baixar o conteúdo completo.</p></div></body></html>';
+        + '<body><div><h1>Página não baixada</h1><p>Conecte-se à internet e use "Salvar &gt; Modo Offline" para baixar o conteúdo.</p></div></body></html>';
 }
 
 function reply(event, payload) {
@@ -271,19 +311,19 @@ self.addEventListener('message', (event) => {
     }
 });
 
-function buildRequiredManifest() {
+function buildManifest() {
     const base = scope();
     const app = APP_FILES.map((p) => (p.indexOf('http') === 0 ? p : base + p));
-    const bible = [];
+    const bibleHtml = [];
+    const bibleJson = [];
     for (let i = 0; i < BIBLE_BOOKS.length; i++) {
         const b = BIBLE_BOOKS[i];
-        bible.push(base + 'biblia/livro/' + b.folder + '/' + b.file + '.html');
-        bible.push(base + 'sentinela/biblia/data/' + b.file + '.json');
+        bibleHtml.push(base + 'biblia/livro/' + b.folder + '/' + b.file + '.html');
+        bibleJson.push(base + 'sentinela/biblia/data/' + b.file + '.json');
     }
-    return { app: app, bible: bible };
+    return { app: app, bibleHtml: bibleHtml, bibleJson: bibleJson };
 }
 
-// O Segredo para não estrangular o iPhone: Lotes paralelos
 async function processInBatches(tasks, batchSize, source, progressRef) {
     const failed = [];
     for (let i = 0; i < tasks.length; i += batchSize) {
@@ -300,39 +340,42 @@ async function processInBatches(tasks, batchSize, source, progressRef) {
                 return false;
             }
         }));
-        
         batch.forEach((task, index) => {
-            if (!results[index]) failed.push(task);
-            progressRef.loaded++;
+            if (!results[index] && task.required) failed.push(task);
+            if (task.required && progressRef) progressRef.loaded++;
         });
-        
-        if (source) source.postMessage({ type: 'DOWNLOAD_PROGRESS', loaded: progressRef.loaded, total: progressRef.total });
+        if (source && progressRef) {
+            source.postMessage({ type: 'DOWNLOAD_PROGRESS', loaded: progressRef.loaded, total: progressRef.total });
+        }
     }
     return failed;
 }
 
 async function startDownload(source, semanaStr) {
     try {
-        const req = buildRequiredManifest();
         const appCache = await caches.open(CACHE_APP);
         const bibleCache = await caches.open(CACHE_BIBLE);
+        const man = buildManifest();
 
         const tasks = [];
-        for (let i = 0; i < req.app.length; i++) tasks.push({ url: req.app[i], cache: appCache });
-        for (let i = 0; i < req.bible.length; i++) tasks.push({ url: req.bible[i], cache: bibleCache });
+        for (let i = 0; i < man.app.length; i++) tasks.push({ url: man.app[i], cache: appCache, required: true });
+        for (let i = 0; i < man.bibleHtml.length; i++) tasks.push({ url: man.bibleHtml[i], cache: bibleCache, required: true });
+        for (let i = 0; i < man.bibleJson.length; i++) tasks.push({ url: man.bibleJson[i], cache: bibleCache, required: true });
 
-        const progressRef = { loaded: 0, total: tasks.length };
+        const required = tasks.filter((t) => t.required).length;
+        const progressRef = { loaded: 0, total: required };
         let failed = await processInBatches(tasks, 6, source, progressRef);
 
-        // Segunda tentativa nos que falharam
         if (failed.length > 0) {
             progressRef.loaded -= failed.length;
-            failed = await processInBatches(failed, 3, null, progressRef);
+            failed = await processInBatches(failed, 3, source, progressRef);
         }
 
         if (semanaStr) {
-            await downloadOptional(appCache, semanaStr);
+            await downloadSentinela(bibleCache, semanaStr);
         }
+
+        await setFlag();
 
         const missing = failed.length;
         if (source) source.postMessage({
@@ -347,37 +390,33 @@ async function startDownload(source, semanaStr) {
     }
 }
 
-async function downloadOptional(appCache, semanaStr) {
+async function downloadSentinela(cache, semanaStr) {
     const base = scope();
-    const optUrl = base + 'sentinela/artigos/' + semanaStr + '.html';
-    
+    const artUrl = base + 'sentinela/artigos/' + semanaStr + '.html';
     try {
-        const res = await fetch(optUrl, { cache: 'reload' });
-        if (res && res.ok) {
-            await appCache.put(optUrl, res.clone());
-            const html = await res.text();
-            const re = /class=["']imagem(\d+)["']/g;
-            const ids = [];
-            let m;
-            while ((m = re.exec(html))) ids.push(m[1]);
-            
-            const tasks = [];
-            for (let i = 0; i < ids.length; i++) {
-                tasks.push({ url: base + 'sentinela/imagem/semanas/' + semanaStr + '/img' + ids[i] + '.png', cache: appCache });
-                tasks.push({ url: base + 'sentinela/imagem/semanas/' + semanaStr + '/leg' + ids[i] + '.txt', cache: appCache });
-            }
-            await processInBatches(tasks, 5, null, {loaded:0, total:tasks.length});
+        const res = await fetch(artUrl, { cache: 'reload', credentials: 'omit' });
+        if (!res || !res.ok) return;
+        await cache.put(artUrl, res.clone());
+        const html = await res.text();
+        const re = /class=["']imagem(\d+)["']/g;
+        const ids = [];
+        let m;
+        while ((m = re.exec(html))) ids.push(m[1]);
+
+        const tasks = [];
+        for (let i = 0; i < ids.length; i++) {
+            tasks.push({ url: base + 'sentinela/imagem/semanas/' + semanaStr + '/img' + ids[i] + '.png', cache: cache, required: false });
+            tasks.push({ url: base + 'sentinela/imagem/semanas/' + semanaStr + '/leg' + ids[i] + '.txt', cache: cache, required: false });
         }
+        await processInBatches(tasks, 5, null, null);
     } catch (e) {}
 }
 
-// CORREÇÃO: Apaga TUDO incondicionalmente, sem deixar migalhas
 async function clearOfflineCaches() {
     const names = await caches.keys();
-    await Promise.all(names.map(name => caches.delete(name)));
+    await Promise.all(names.map((name) => caches.delete(name)));
 }
 
-// CORREÇÃO: Conta *somente* nos caches específicos, ignorando o RUNTIME que se repopula sozinho
 async function countPresentInCache(urls, cacheName) {
     let present = 0;
     try {
@@ -394,21 +433,32 @@ async function getCacheStatus(semanaStr) {
         return { type: 'CACHE_STATUS', hasCache: false, complete: false, present: 0, total: 0 };
     }
 
-    const req = buildRequiredManifest();
-    
-    // Conta os arquivos EXCLUSIVAMENTE nos cofres designados
-    const appPresent = await countPresentInCache(req.app, CACHE_APP);
-    const biblePresent = await countPresentInCache(req.bible, CACHE_BIBLE);
-    
-    const present = appPresent + biblePresent;
-    const total = req.app.length + req.bible.length;
+    const flag = await hasFlag();
+    if (!flag) {
+        return {
+            type: 'CACHE_STATUS',
+            hasCache: false,
+            complete: false,
+            present: 0,
+            total: 0,
+            semana: semanaStr
+        };
+    }
+
+    const man = buildManifest();
+    const appPresent = await countPresentInCache(man.app, CACHE_APP);
+    const bibleHtmlPresent = await countPresentInCache(man.bibleHtml, CACHE_BIBLE);
+    const bibleJsonPresent = await countPresentInCache(man.bibleJson, CACHE_BIBLE);
+
+    const present = appPresent + bibleHtmlPresent + bibleJsonPresent;
+    const total = man.app.length + man.bibleHtml.length + man.bibleJson.length;
 
     let articlePresent = false;
     if (semanaStr) {
         const articleUrl = scope() + 'sentinela/artigos/' + semanaStr + '.html';
         try {
-            const appCache = await caches.open(CACHE_APP);
-            articlePresent = !!(await appCache.match(articleUrl, { ignoreSearch: true }));
+            const bibleCache = await caches.open(CACHE_BIBLE);
+            articlePresent = !!(await bibleCache.match(articleUrl, { ignoreSearch: true }));
         } catch (e) {}
     }
 
