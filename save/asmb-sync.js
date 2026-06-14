@@ -189,6 +189,82 @@ class AssembleiaSync {
             }
         }
     }
+
+    notReady() {
+        if (!window.SupabaseSync) return true;
+        if (typeof window.SupabaseSync.salvarAssembleiaAnotacoes !== 'function') return true;
+        if (typeof window.SupabaseSync.carregarAssembleiaAnotacoes !== 'function') return true;
+        return false;
+    }
+
+    async pushOverwrite() {
+        if (this.notReady()) return { success: false, error: 'Nuvem indisponível' };
+        const local = this.collectAnnotationsFromLocalStorage();
+        const result = await window.SupabaseSync.salvarAssembleiaAnotacoes(this.ano, local);
+        if (result && result.success) this.lastSavedDataJSON = JSON.stringify(local);
+        return result;
+    }
+
+    async pushMerge() {
+        if (this.notReady()) return { success: false, error: 'Nuvem indisponível' };
+        const local = this.collectAnnotationsFromLocalStorage();
+        let remoto = null;
+        try { remoto = await window.SupabaseSync.carregarAssembleiaAnotacoes(this.ano); } catch (e) { remoto = null; }
+        const merge = {};
+        if (remoto && typeof remoto === 'object') {
+            for (const k of Object.keys(remoto)) merge[k] = remoto[k];
+        }
+        for (const k of Object.keys(local)) merge[k] = local[k];
+        const result = await window.SupabaseSync.salvarAssembleiaAnotacoes(this.ano, merge);
+        if (result && result.success) this.lastSavedDataJSON = JSON.stringify(merge);
+        return result;
+    }
+
+    async pushDay(dia) {
+        if (this.notReady()) return { success: false, error: 'Nuvem indisponível' };
+        let remoto = null;
+        try { remoto = await window.SupabaseSync.carregarAssembleiaAnotacoes(this.ano); } catch (e) { remoto = null; }
+        const merge = {};
+        if (remoto && typeof remoto === 'object') {
+            for (const k of Object.keys(remoto)) merge[k] = remoto[k];
+        }
+        const prefixoDia = `${this.ano}-${dia}-`;
+        const prefs = ['tema-interface', 'tamanho-fonte-global', 'editor-performance-mode', 'cor-sex', 'cor-sab', 'cor-dom'];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith(prefixoDia) || prefs.includes(key)) {
+                merge[key] = localStorage.getItem(key);
+            }
+        }
+        const result = await window.SupabaseSync.salvarAssembleiaAnotacoes(this.ano, merge);
+        if (result && result.success) this.lastSavedDataJSON = JSON.stringify(merge);
+        return result;
+    }
+
+    async pullOverwrite() {
+        if (this.notReady()) return { success: false, error: 'Nuvem indisponível' };
+        let remoto = null;
+        try { remoto = await window.SupabaseSync.carregarAssembleiaAnotacoes(this.ano); } catch (e) {
+            return { success: false, error: 'Falha ao buscar a nuvem' };
+        }
+        const prefixo = `${this.ano}-`;
+        const prefs = ['tema-interface', 'tamanho-fonte-global', 'editor-performance-mode', 'cor-sex', 'cor-sab', 'cor-dom'];
+        const remover = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith(prefixo) || prefs.includes(key)) remover.push(key);
+        }
+        for (const k of remover) localStorage.removeItem(k);
+
+        if (remoto && typeof remoto === 'object') {
+            for (const k of Object.keys(remoto)) localStorage.setItem(k, remoto[k]);
+            this.lastSavedDataJSON = JSON.stringify(remoto);
+        } else {
+            this.lastSavedDataJSON = '{}';
+        }
+        sessionStorage.setItem(`asmb_loaded_${this.ano}`, 'true');
+        return { success: true };
+    }
 }
 
 window.assembleiaSync = new AssembleiaSync();
