@@ -303,6 +303,21 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       </div>
+
+      <div class="sync-alert-overlay" id="asmbPwOverlay" aria-hidden="true">
+        <div class="sync-alert" role="alertdialog">
+          <div class="sync-alert__content">
+            <h3 class="sync-alert__title">Digite a senha de permissão</h3>
+            <p class="sync-alert__text">Esta ação precisa de autorização.</p>
+            <input type="password" id="asmbPwInput" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;box-sizing:border-box;margin-top:14px;padding:12px 14px;border:2px solid var(--border-input,#e5e7eb);border-radius:12px;font-size:16px;background:var(--bg-input,#fafafa);color:var(--text-input,#1a1a1a);text-align:center;letter-spacing:2px;">
+            <p id="asmbPwError" style="display:none;color:var(--cor-erro,#ef4444);font-size:12px;margin:8px 0 0;">Senha incorreta.</p>
+          </div>
+          <div class="sync-alert__actions">
+            <button class="sync-alert__btn" id="asmbPwCancel">Cancelar</button>
+            <button class="sync-alert__btn sync-alert__btn--right is-bold" id="asmbPwOk">Confirmar</button>
+          </div>
+        </div>
+      </div>
     `);
 
     const menuControles = document.getElementById('controles');
@@ -354,6 +369,45 @@ document.addEventListener("DOMContentLoaded", () => {
         btnRight.addEventListener('click', onRight);
 
         overlay.classList.add('is-open');
+      });
+    }
+
+    function pedirSenha() {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('asmbPwOverlay');
+        const input = document.getElementById('asmbPwInput');
+        const erro = document.getElementById('asmbPwError');
+        const btnOk = document.getElementById('asmbPwOk');
+        const btnCancel = document.getElementById('asmbPwCancel');
+
+        input.value = '';
+        erro.style.display = 'none';
+
+        const cleanup = () => {
+          overlay.classList.remove('is-open');
+          btnOk.removeEventListener('click', onOk);
+          btnCancel.removeEventListener('click', onCancel);
+          input.removeEventListener('keydown', onKey);
+        };
+        const onOk = () => {
+          if (input.value === 'Noj') {
+            cleanup();
+            resolve(true);
+          } else {
+            erro.style.display = 'block';
+            input.value = '';
+            input.focus();
+          }
+        };
+        const onCancel = () => { cleanup(); resolve(false); };
+        const onKey = (e) => { if (e.key === 'Enter') onOk(); };
+
+        btnOk.addEventListener('click', onOk);
+        btnCancel.addEventListener('click', onCancel);
+        input.addEventListener('keydown', onKey);
+
+        overlay.classList.add('is-open');
+        setTimeout(() => input.focus(), 100);
       });
     }
 
@@ -438,12 +492,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     async function executeSyncCall(tab, option, day) {
+       const year = document.documentElement.dataset.programYear || '2026';
+       const sync = window.assembleiaSync;
+
+       const autorizado = await pedirSenha();
+       if (!autorizado) return;
+
        if (tab === 'apagar') {
          if (!window.SupabaseSync || typeof window.SupabaseSync.apagarAssembleiaCompleto !== 'function') {
            alert('Nuvem indisponível no momento. Tente novamente.');
            return;
          }
-         const year = document.documentElement.dataset.programYear || '2026';
          let result;
          if (option === 'all') {
            result = await window.SupabaseSync.apagarAssembleiaCompleto(year);
@@ -451,14 +510,72 @@ document.addEventListener("DOMContentLoaded", () => {
            result = await window.SupabaseSync.apagarAssembleiaDia(year, day);
          }
          if (result && result.success) {
-           alert('Dados da nuvem apagados com sucesso.');
+           apagarLocalAssembleia(year, option === 'all' ? null : day);
+           if (sync) sync.lastSavedDataJSON = '{}';
+           if (window.AssembleiaClickables && typeof window.AssembleiaClickables.refresh === 'function') {
+             window.AssembleiaClickables.refresh();
+             alert('Anotações apagadas da nuvem e do aparelho.');
+           } else {
+             alert('Anotações apagadas. Atualizando a tela...');
+             location.reload();
+           }
          } else {
            alert('Não foi possível apagar: ' + ((result && result.error) || 'erro desconhecido'));
          }
          return;
        }
-       console.log(`[Sync Request] Aba: ${tab}, Opção: ${option}, Dia: ${day}`);
-       alert(`Ação: ${tab} -> ${option} acionada com sucesso! (Lógica backend a implementar).`);
+
+       if (!sync) {
+         alert('Sincronização indisponível no momento. Tente novamente em instantes.');
+         return;
+       }
+       if (!localStorage.getItem('supabase_user')) {
+         alert('Você precisa estar logado para usar a nuvem do congresso.');
+         return;
+       }
+       if (!navigator.onLine) {
+         alert('Você precisa de internet para sincronizar.');
+         return;
+       }
+
+       let result;
+       try {
+         if (tab === 'enviar') {
+           if (option === 'overwrite') result = await sync.pushOverwrite();
+           else if (option === 'day') result = await sync.pushDay(day);
+           else result = await sync.pushMerge();
+         } else if (tab === 'baixar') {
+           if (option === 'overwrite') {
+             result = await sync.pullOverwrite();
+             if (result && result.success) {
+               alert('Conteúdo baixado da nuvem. Atualizando a tela...');
+               location.reload();
+               return;
+             }
+           } else {
+             await sync.loadFromSupabase(true);
+             result = { success: true };
+           }
+         }
+       } catch (e) {
+         result = { success: false, error: e.message };
+       }
+
+       if (result && result.success) {
+         alert(tab === 'enviar' ? 'Anotações enviadas para a nuvem com sucesso.' : 'Anotações baixadas da nuvem com sucesso.');
+       } else {
+         alert('Não foi possível concluir: ' + ((result && result.error) || 'erro desconhecido'));
+       }
+    }
+
+    function apagarLocalAssembleia(year, dia) {
+       const prefixo = dia ? `${year}-${dia}-` : `${year}-`;
+       const remover = [];
+       for (let i = 0; i < localStorage.length; i++) {
+         const key = localStorage.key(i);
+         if (key && key.startsWith(prefixo)) remover.push(key);
+       }
+       for (const k of remover) localStorage.removeItem(k);
     }
 
     // LÓGICA DE LIMPEZA LOCAL (TRASH)
