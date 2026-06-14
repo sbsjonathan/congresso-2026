@@ -1,7 +1,8 @@
-const APP_VERSION = 'v7';
+// ATENÇÃO: APP_VERSION subiu para forçar a substituição no iPhone
+const APP_VERSION = 'v9'; 
 const CACHE_APP = 'sentinela-app-' + APP_VERSION;
 const CACHE_BIBLE = 'sentinela-bible-v1';
-const CACHE_RUNTIME = 'sentinela-runtime-' + APP_VERSION;
+const CACHE_RUNTIME = 'sentinela-runtime-v1';
 const KEEP_CACHES = [CACHE_APP, CACHE_BIBLE, CACHE_RUNTIME];
 
 const RUNTIME_HOSTS = [
@@ -13,6 +14,7 @@ const RUNTIME_HOSTS = [
 ];
 
 const NETWORK_ONLY_HOSTS = ['supabase.co', 'workers.dev'];
+const MAX_RUNTIME_ITEMS = 60;
 
 const APP_FILES = [
     '',
@@ -105,16 +107,6 @@ const APP_FILES = [
     'https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.0.5/swiper-bundle.min.css'
 ];
 
-const OPTIONAL_FILES = [
-    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-    'assets/icons/apple-touch-icon.png',
-    'assets/icons/favicon-32.png',
-    'assets/icons/icon-192.png',
-    'assets/icons/icon-512.png',
-    'assets/icons/maskable-icon-512.png',
-    'worker/worker.html'
-];
-
 const BIBLE_BOOKS = [
     { folder: '01-genesis', file: 'genesis' }, { folder: '02-exodo', file: 'exodo' },
     { folder: '03-levitico', file: 'levitico' }, { folder: '04-numeros', file: 'numeros' },
@@ -174,6 +166,52 @@ function hostMatches(url, hosts) {
     return false;
 }
 
+async function pruneCache(cacheName, maxItems) {
+    try {
+        const cache = await caches.open(cacheName);
+        const keys = await cache.keys();
+        if (keys.length > maxItems) {
+            for (let i = 0; i < keys.length - maxItems; i++) {
+                await cache.delete(keys[i]);
+            }
+        }
+    } catch (e) {}
+}
+
+async function staleWhileRevalidate(req, cacheName) {
+    const cache = await caches.open(cacheName);
+    const cachedRes = await cache.match(req);
+    
+    const fetchPromise = fetch(req).then(networkRes => {
+        if (networkRes && networkRes.ok) {
+            cache.put(req, networkRes.clone());
+        }
+        return networkRes;
+    }).catch(() => {});
+
+    return cachedRes || fetchPromise || new Response(offlinePage(), {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
+}
+
+async function cacheFirst(req, cacheName) {
+    const cached = await caches.match(req, { ignoreSearch: true });
+    if (cached) return cached;
+
+    try {
+        const res = await fetch(req);
+        if (res && (res.ok || res.type === 'opaque')) {
+            const cache = await caches.open(cacheName);
+            await cache.put(req, res.clone());
+            if (cacheName === CACHE_RUNTIME) pruneCache(CACHE_RUNTIME, MAX_RUNTIME_ITEMS);
+        }
+        return res;
+    } catch (e) {
+        return Response.error();
+    }
+}
+
 self.addEventListener('fetch', (event) => {
     const req = event.request;
     if (req.method !== 'GET') return;
@@ -184,46 +222,40 @@ self.addEventListener('fetch', (event) => {
     if (hostMatches(url, NETWORK_ONLY_HOSTS)) return;
 
     const sameOrigin = url.origin === self.location.origin;
-    const cacheable = sameOrigin || hostMatches(url, RUNTIME_HOSTS);
-    if (!cacheable) return;
-
-    event.respondWith(cacheFirst(req));
-});
-
-async function cacheFirst(req) {
-    const cached = await caches.match(req, { ignoreSearch: true });
-    if (cached) return cached;
-
-    try {
-        const res = await fetch(req);
-        if (res && (res.ok || res.type === 'opaque')) {
-            const copy = res.clone();
-            caches.open(CACHE_RUNTIME).then((c) => c.put(req, copy)).catch(() => {});
-        }
-        return res;
-    } catch (e) {
-        const fallback = await caches.match(req, { ignoreSearch: true });
-        if (fallback) return fallback;
-        const accept = req.headers.get('accept') || '';
-        if (req.mode === 'navigate' || accept.indexOf('text/html') !== -1) {
-            return new Response(offlinePage(), {
-                status: 200,
-                headers: { 'Content-Type': 'text/html; charset=utf-8' }
-            });
-        }
-        return Response.error();
+    
+    // BÍBLIA e IMAGENS: Cache First (não mudam)
+    if (sameOrigin && (url.pathname.includes('/biblia/') || url.pathname.includes('/imagem/semanas/'))) {
+        event.respondWith(cacheFirst(req, CACHE_BIBLE));
+        return;
     }
-}
+
+    // ARQUIVOS DO APP: Stale-While-Revalidate (atualiza no fundo invisível)
+    if (sameOrigin) {
+        event.respondWith(staleWhileRevalidate(req, CACHE_APP));
+        return;
+    }
+
+    // FONTES E CDNs: Cache First com limpeza automática (Pruning)
+    if (hostMatches(url, RUNTIME_HOSTS)) {
+        event.respondWith(cacheFirst(req, CACHE_RUNTIME));
+        return;
+    }
+});
 
 function offlinePage() {
     return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
         + '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">'
         + '<title>Sem conexão</title><style>body{margin:0;min-height:100dvh;display:flex;'
         + 'align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,sans-serif;'
-        + 'background:#000;color:#f2f2f7;text-align:center;padding:24px}div{max-width:320px}'
-        + 'h1{font-size:20px;margin:0 0 8px}p{font-size:15px;color:#8e8e93;line-height:1.5}</style></head>'
-        + '<body><div><h1>Página não baixada</h1><p>Esta parte ainda não está disponível offline. '
-        + 'Conecte-se à internet e baixe o conteúdo para uso offline.</p></div></body></html>';
+        + 'background:#f5f7fa;color:#1f2937;text-align:center;padding:24px}div{max-width:320px;background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.05)}'
+        + 'h1{font-size:20px;margin:0 0 10px;color:#375255}p{font-size:15px;color:#6b7280;line-height:1.5;margin:0}</style></head>'
+        + '<body><div><h1>Página Offline</h1><p>Conecte-se à internet e acesse "Salvar > Modo Offline" para baixar o conteúdo completo.</p></div></body></html>';
+}
+
+function reply(event, payload) {
+    if (event.ports && event.ports[0]) event.ports[0].postMessage(payload);
+    else if (event.source) event.source.postMessage(payload);
+    return Promise.resolve();
 }
 
 self.addEventListener('message', (event) => {
@@ -231,22 +263,13 @@ self.addEventListener('message', (event) => {
     if (!data || !data.action) return;
 
     if (data.action === 'START_DOWNLOAD') {
-        event.waitUntil(startDownload(event.source));
+        event.waitUntil(startDownload(event.source, data.semana));
     } else if (data.action === 'CLEAR_CACHE') {
         event.waitUntil(clearOfflineCaches().then(() => reply(event, { type: 'CACHE_CLEARED' })));
     } else if (data.action === 'CACHE_STATUS') {
-        event.waitUntil(getCacheStatus().then((status) => reply(event, status)));
+        event.waitUntil(getCacheStatus(data.semana).then((status) => reply(event, status)));
     }
 });
-
-function reply(event, payload) {
-    if (event.ports && event.ports[0]) {
-        event.ports[0].postMessage(payload);
-    } else if (event.source) {
-        event.source.postMessage(payload);
-    }
-    return Promise.resolve();
-}
 
 function buildRequiredManifest() {
     const base = scope();
@@ -260,31 +283,35 @@ function buildRequiredManifest() {
     return { app: app, bible: bible };
 }
 
-function getSemanaAtual() {
-    const hoje = new Date();
-    const dia = hoje.getDay();
-    const diff = dia === 0 ? -6 : 1 - dia;
-    const segunda = new Date(hoje);
-    segunda.setDate(hoje.getDate() + diff);
-    const dd = String(segunda.getDate()).padStart(2, '0');
-    const mm = String(segunda.getMonth() + 1).padStart(2, '0');
-    return dd + '-' + mm;
-}
-
-async function cacheUrl(cache, url) {
-    try {
-        const res = await fetch(url, { cache: 'reload', credentials: 'omit' });
-        if (res && (res.ok || res.type === 'opaque')) {
-            await cache.put(url, res.clone());
-            return true;
-        }
-        return false;
-    } catch (e) {
-        return false;
+// O Segredo para não estrangular o iPhone: Lotes paralelos
+async function processInBatches(tasks, batchSize, source, progressRef) {
+    const failed = [];
+    for (let i = 0; i < tasks.length; i += batchSize) {
+        const batch = tasks.slice(i, i + batchSize);
+        const results = await Promise.all(batch.map(async (task) => {
+            try {
+                const res = await fetch(task.url, { cache: 'reload', credentials: 'omit' });
+                if (res && (res.ok || res.type === 'opaque')) {
+                    await task.cache.put(task.url, res.clone());
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                return false;
+            }
+        }));
+        
+        batch.forEach((task, index) => {
+            if (!results[index]) failed.push(task);
+            progressRef.loaded++;
+        });
+        
+        if (source) source.postMessage({ type: 'DOWNLOAD_PROGRESS', loaded: progressRef.loaded, total: progressRef.total });
     }
+    return failed;
 }
 
-async function startDownload(source) {
+async function startDownload(source, semanaStr) {
     try {
         const req = buildRequiredManifest();
         const appCache = await caches.open(CACHE_APP);
@@ -294,101 +321,96 @@ async function startDownload(source) {
         for (let i = 0; i < req.app.length; i++) tasks.push({ url: req.app[i], cache: appCache });
         for (let i = 0; i < req.bible.length; i++) tasks.push({ url: req.bible[i], cache: bibleCache });
 
-        const total = tasks.length;
-        let loaded = 0;
-        let failed = [];
+        const progressRef = { loaded: 0, total: tasks.length };
+        let failed = await processInBatches(tasks, 6, source, progressRef);
 
-        for (let i = 0; i < tasks.length; i++) {
-            const ok = await cacheUrl(tasks[i].cache, tasks[i].url);
-            if (!ok) failed.push(tasks[i]);
-            loaded++;
-            if (source) source.postMessage({ type: 'DOWNLOAD_PROGRESS', loaded: loaded, total: total });
+        // Segunda tentativa nos que falharam
+        if (failed.length > 0) {
+            progressRef.loaded -= failed.length;
+            failed = await processInBatches(failed, 3, null, progressRef);
         }
 
-        for (let pass = 0; pass < 2 && failed.length; pass++) {
-            const still = [];
-            for (let i = 0; i < failed.length; i++) {
-                const ok = await cacheUrl(failed[i].cache, failed[i].url);
-                if (!ok) still.push(failed[i]);
-            }
-            failed = still;
+        if (semanaStr) {
+            await downloadOptional(appCache, semanaStr);
         }
-
-        await downloadOptional(appCache);
 
         const missing = failed.length;
         if (source) source.postMessage({
             type: 'DOWNLOAD_COMPLETE',
             ok: missing === 0,
-            loaded: total - missing,
-            total: total,
-            missing: missing,
-            missingUrls: failed.map(function (t) { return t.url; })
+            loaded: progressRef.total - missing,
+            total: progressRef.total,
+            missing: missing
         });
     } catch (e) {
         if (source) source.postMessage({ type: 'DOWNLOAD_ERROR' });
     }
 }
 
-async function downloadOptional(appCache) {
+async function downloadOptional(appCache, semanaStr) {
     const base = scope();
-    const opt = OPTIONAL_FILES.map((p) => (p.indexOf('http') === 0 ? p : base + p));
-    const semana = getSemanaAtual();
-    opt.push(base + 'sentinela/artigos/' + semana + '.html');
-
-    for (let i = 0; i < opt.length; i++) {
-        await cacheUrl(appCache, opt[i]);
-    }
-
+    const optUrl = base + 'sentinela/artigos/' + semanaStr + '.html';
+    
     try {
-        const res = await fetch(base + 'sentinela/artigos/' + semana + '.html', { cache: 'reload' });
-        if (!res.ok) return;
-        const html = await res.text();
-        const re = /class=["']imagem(\d+)["']/g;
-        const ids = [];
-        let m;
-        while ((m = re.exec(html))) ids.push(m[1]);
-        for (let i = 0; i < ids.length; i++) {
-            await cacheUrl(appCache, base + 'sentinela/imagem/semanas/' + semana + '/img' + ids[i] + '.png');
-            await cacheUrl(appCache, base + 'sentinela/imagem/semanas/' + semana + '/leg' + ids[i] + '.txt');
+        const res = await fetch(optUrl, { cache: 'reload' });
+        if (res && res.ok) {
+            await appCache.put(optUrl, res.clone());
+            const html = await res.text();
+            const re = /class=["']imagem(\d+)["']/g;
+            const ids = [];
+            let m;
+            while ((m = re.exec(html))) ids.push(m[1]);
+            
+            const tasks = [];
+            for (let i = 0; i < ids.length; i++) {
+                tasks.push({ url: base + 'sentinela/imagem/semanas/' + semanaStr + '/img' + ids[i] + '.png', cache: appCache });
+                tasks.push({ url: base + 'sentinela/imagem/semanas/' + semanaStr + '/leg' + ids[i] + '.txt', cache: appCache });
+            }
+            await processInBatches(tasks, 5, null, {loaded:0, total:tasks.length});
         }
     } catch (e) {}
 }
 
+// CORREÇÃO: Apaga TUDO incondicionalmente, sem deixar migalhas
 async function clearOfflineCaches() {
     const names = await caches.keys();
-    await Promise.all(names.map((n) => {
-        if (n.indexOf('sentinela') !== -1 || n.indexOf('reuniao') !== -1) return caches.delete(n);
-        return Promise.resolve();
-    }));
+    await Promise.all(names.map(name => caches.delete(name)));
 }
 
-async function countPresent(urls) {
+// CORREÇÃO: Conta *somente* nos caches específicos, ignorando o RUNTIME que se repopula sozinho
+async function countPresentInCache(urls, cacheName) {
     let present = 0;
-    for (let i = 0; i < urls.length; i++) {
-        const hit = await caches.match(urls[i], { ignoreSearch: true });
-        if (hit) present++;
-    }
+    try {
+        const cache = await caches.open(cacheName);
+        for (let i = 0; i < urls.length; i++) {
+            if (await cache.match(urls[i], { ignoreSearch: true })) present++;
+        }
+    } catch (e) {}
     return present;
 }
 
-async function getCacheStatus() {
+async function getCacheStatus(semanaStr) {
     if (!('caches' in self)) {
         return { type: 'CACHE_STATUS', hasCache: false, complete: false, present: 0, total: 0 };
     }
 
     const req = buildRequiredManifest();
-    const appPresent = await countPresent(req.app);
-    const biblePresent = await countPresent(req.bible);
-
-    const appTotal = req.app.length;
-    const bibleTotal = req.bible.length;
+    
+    // Conta os arquivos EXCLUSIVAMENTE nos cofres designados
+    const appPresent = await countPresentInCache(req.app, CACHE_APP);
+    const biblePresent = await countPresentInCache(req.bible, CACHE_BIBLE);
+    
     const present = appPresent + biblePresent;
-    const total = appTotal + bibleTotal;
+    const total = req.app.length + req.bible.length;
 
-    const semana = getSemanaAtual();
-    const articleUrl = scope() + 'sentinela/artigos/' + semana + '.html';
-    const articlePresent = !!(await caches.match(articleUrl, { ignoreSearch: true }));
+    let articlePresent = false;
+    if (semanaStr) {
+        const articleUrl = scope() + 'sentinela/artigos/' + semanaStr + '.html';
+        try {
+            const appCache = await caches.open(CACHE_APP);
+            articlePresent = !!(await appCache.match(articleUrl, { ignoreSearch: true }));
+        } catch (e) {}
+    }
 
     return {
         type: 'CACHE_STATUS',
@@ -396,11 +418,7 @@ async function getCacheStatus() {
         complete: total > 0 && present === total,
         present: present,
         total: total,
-        appPresent: appPresent,
-        appTotal: appTotal,
-        biblePresent: biblePresent,
-        bibleTotal: bibleTotal,
         articlePresent: articlePresent,
-        semana: semana
+        semana: semanaStr
     };
 }
