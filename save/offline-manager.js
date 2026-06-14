@@ -20,9 +20,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getWeekToDownload() {
         if (typeof window.getGlobalWeek === 'function') {
-            return window.getGlobalWeek();
+            const w = window.getGlobalWeek();
+            if (w) return w;
         }
-        return window.semanaAtual || '';
+        if (window.semanaAtual) return window.semanaAtual;
+        const hoje = new Date();
+        const dia = hoje.getDay();
+        const diff = dia === 0 ? -6 : 1 - dia;
+        const segunda = new Date(hoje);
+        segunda.setDate(hoje.getDate() + diff);
+        const dd = String(segunda.getDate()).padStart(2, '0');
+        const mm = String(segunda.getMonth() + 1).padStart(2, '0');
+        return dd + '-' + mm;
+    }
+
+    async function ensurePersist() {
+        try {
+            if (navigator.storage && navigator.storage.persist) {
+                await navigator.storage.persist();
+            }
+        } catch (e) {}
     }
 
     function showProgress(show) {
@@ -33,54 +50,46 @@ document.addEventListener('DOMContentLoaded', () => {
     function setProgress(loaded, total) {
         const percent = total ? Math.round((loaded / total) * 100) : 0;
         if (progressFill) progressFill.style.width = percent + '%';
-        if (progressText) progressText.textContent = `Baixando arquivos... ${percent}%`;
+        if (progressText) progressText.textContent = 'Baixando... ' + percent + '%';
     }
 
     function render(status) {
         lastStatus = status;
         if (busy) return;
 
-        const isPartial = !!(status && !status.complete && status.present > 0);
+        const baixado = !!(status && status.total > 0);
         const isReady = !!(status && status.complete);
+        const isPartial = baixado && !isReady && status.present > 0;
 
-        // O botão de apagar só aparece se houver ALGUMA coisa baixada
-        btnClear.style.display = isPartial || isReady ? 'block' : 'none';
+        btnClear.style.display = baixado ? 'block' : 'none';
 
-        // ESTADO 1: Zerado (Nada baixado)
-        if (!status || (status.present === 0)) {
-            btnToggle.disabled = false;
-            btnToggle.textContent = 'Baixar App para Offline';
-            btnToggle.style.display = 'block';
-            offlineCard.classList.remove('is-ready');
-            iconSpan.textContent = '☁️';
-            titleText.textContent = 'Modo Offline';
-            descText.textContent = 'A Bíblia e a Sentinela estarão com você, mesmo sem internet.';
-            return;
-        }
-
-        // ESTADO 3: Completo (Tudo baixado)
-        if (status.complete) {
-            btnToggle.style.display = 'none'; // Some o botão de baixar
+        if (isReady) {
+            btnToggle.style.display = 'none';
             offlineCard.classList.add('is-ready');
             iconSpan.textContent = '✅';
-            titleText.textContent = 'App Pronto Offline';
-            descText.textContent = status.articlePresent 
-                ? `A Bíblia, o App e A Sentinela da semana ${status.semana} estão salvos no aparelho.`
-                : `A Bíblia e o App estão salvos. (A Sentinela desta semana não foi encontrada).`;
+            titleText.textContent = 'Tudo pronto para o congresso';
+            descText.textContent = 'A Bíblia e a Sentinela estão salvas no aparelho. No congresso você abre tudo sem gastar dados móveis.';
             return;
         }
 
-        // ESTADO 2: Incompleto / Faltando pedaços
         if (isPartial) {
             btnToggle.disabled = false;
-            btnToggle.textContent = 'Completar Download';
             btnToggle.style.display = 'block';
+            btnToggle.textContent = 'Completar download';
             offlineCard.classList.remove('is-ready');
             iconSpan.textContent = '⚠️';
-            titleText.textContent = 'Download Incompleto';
-            descText.textContent = `O download foi interrompido. Faltam ${status.total - status.present} arquivos.`;
+            titleText.textContent = 'Download incompleto';
+            descText.textContent = 'O download foi interrompido. Toque para completar e garantir tudo offline.';
             return;
         }
+
+        btnToggle.disabled = false;
+        btnToggle.style.display = 'block';
+        btnToggle.textContent = 'Baixar para o congresso';
+        offlineCard.classList.remove('is-ready');
+        iconSpan.textContent = '☁️';
+        titleText.textContent = 'Modo Offline';
+        descText.textContent = 'Nenhum dado salvo. Baixe a Bíblia e a Sentinela no Wi-Fi para não gastar dados móveis no congresso.';
     }
 
     function getActiveWorker() {
@@ -112,21 +121,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function refreshStatus() {
         let status = await requestCacheStatus();
+        if (!status) status = await requestCacheStatus();
         render(status);
         return status;
     }
 
     async function startDownload() {
-        if (document.body.classList.contains('is-offline')) {
-            alert('Você precisa estar conectado à internet para baixar os arquivos.');
+        if (document.body.classList.contains('is-offline') || !navigator.onLine) {
+            alert('Você precisa estar conectado à internet para baixar.');
             return;
         }
         const sw = await getActiveWorker();
         if (!sw) {
-            alert('O sistema está iniciando... Tente novamente em alguns segundos.');
+            alert('O sistema está iniciando. Tente novamente em alguns segundos.');
             return;
         }
-        
         busy = true;
         showProgress(true);
         setProgress(0, 1);
@@ -134,27 +143,19 @@ document.addEventListener('DOMContentLoaded', () => {
         btnClear.style.display = 'none';
         btnToggle.textContent = 'Preparando...';
         offlineCard.classList.remove('is-ready');
-        
-        sw.postMessage({ 
-            action: 'START_DOWNLOAD',
-            semana: getWeekToDownload()
-        });
+        sw.postMessage({ action: 'START_DOWNLOAD', semana: getWeekToDownload() });
     }
 
     async function clearCache() {
         const sw = await getActiveWorker();
         if (!sw) return;
-        
-        // Alerta amigável e direto
-        if (!confirm('Isso vai apagar a Bíblia e a Sentinela do armazenamento offline do aparelho.\n\nFique tranquilo, suas anotações NÃO serão perdidas.\n\nDeseja continuar?')) return;
-        
+        if (!confirm('Isso vai apagar a Bíblia, o App e a Sentinela salvos no aparelho.\n\nSuas anotações NÃO serão perdidas.\n\nDeseja continuar?')) return;
         busy = true;
         btnToggle.style.display = 'block';
         btnToggle.disabled = true;
         btnClear.style.display = 'none';
         btnToggle.textContent = 'Apagando...';
         offlineCard.classList.remove('is-ready');
-        
         sw.postMessage({ action: 'CLEAR_CACHE' });
     }
 
@@ -165,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!busy) startDownload();
     });
-    
+
     btnClear.addEventListener('click', () => {
         if (!busy) clearCache();
     });
@@ -180,23 +181,24 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.type === 'DOWNLOAD_COMPLETE') {
                 busy = false;
                 showProgress(false);
+                await ensurePersist();
                 const status = await refreshStatus();
                 if (!status || !status.complete) {
-                    alert('Atenção: A internet falhou ou alguns arquivos não foram salvos. Toque em "Completar Download" para tentar novamente.');
+                    alert('Alguns arquivos não foram salvos. Toque em "Completar download" para tentar de novo.');
                 }
             } else if (data.type === 'DOWNLOAD_ERROR') {
                 busy = false;
                 showProgress(false);
                 await refreshStatus();
-                alert('Erro ao baixar. Verifique sua conexão com a internet e tente novamente.');
+                alert('Erro ao baixar. Verifique a conexão e tente novamente.');
             } else if (data.type === 'CACHE_CLEARED') {
                 busy = false;
                 showProgress(false);
+                lastStatus = null;
                 await refreshStatus();
             }
         });
     }
 
-    // Inicialização silenciosa
-    refreshStatus();
+    ensurePersist().then(() => refreshStatus());
 });
