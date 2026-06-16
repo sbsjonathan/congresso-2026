@@ -149,99 +149,368 @@
             background: linear-gradient(90deg, var(--cor-principal), var(--text-title));
         }
 
-        .logo { text-align: center; margin-bottom: 30px; }
-        .logo-icon { font-size: 3rem; margin-bottom: 10px; }
-        .logo-title { font-size: 1.5rem; font-weight: 700; color: var(--text-title); margin-bottom: 5px; }
-        .logo-subtitle { font-size: 0.9rem; color: var(--text-subtitle); }
-
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-label); margin-bottom: 8px; }
-        .form-input {
-            width: 100%; padding: 16px; border: 2px solid var(--border-input); border-radius: 12px;
-            font-size: 1rem; transition: all 0.3s ease; background: var(--bg-input); color: var(--text-input); box-sizing: border-box;
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .form-input:focus { outline: none; border-color: var(--cor-principal); background: var(--bg-container); box-shadow: 0 0 0 3px rgba(108, 102, 184, 0.15); }
-        .form-input.error { border-color: var(--cor-erro); background: var(--bg-error); }
+
+        .logo-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .logo-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-title);
+            margin-bottom: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .logo-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-subtitle);
+            transition: color 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-label);
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--border-input);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--bg-input);
+            color: var(--text-input);
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--cor-principal);
+            background: var(--bg-container);
+            box-shadow: 0 0 0 3px rgba(108, 102, 184, 0.15);
+        }
+
+        .form-input.error {
+            border-color: var(--cor-erro);
+            background: var(--bg-error);
+        }
+
+        .form-input.success {
+            border-color: var(--cor-sucesso);
+            background: var(--bg-success);
+        }
 
         .btn {
-            width: 100%; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 600;
-            border: none; cursor: pointer; transition: all 0.2s ease; margin-bottom: 15px; position: relative;
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            margin-bottom: 15px;
+            position: relative;
         }
-        .btn:active { transform: scale(0.98); }
-        .btn-primary { background: var(--cor-principal); color: white; box-shadow: 0 4px 15px rgba(63, 60, 109, 0.3); }
-        .btn-secondary { background: #6b7280; color: white; }
-        [data-theme="dark"] .btn-secondary { background: #48484a; }
-        .btn-load { background: #17a2b8; color: white; }
-        [data-theme="dark"] .btn-load { background: #0c7489; }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
-        .auth-switch { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-subtitle); }
-        .auth-switch button { background: none; border: none; color: var(--cor-principal); font-weight: 600; cursor: pointer; text-decoration: underline; }
+        .btn-primary {
+            background: var(--cor-principal);
+            color: white;
+            box-shadow: 0 4px 15px rgba(63, 60, 109, 0.3);
+        }
 
-        .message { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
-        .message.success { background: var(--bg-success); color: var(--text-success); border: 1px solid var(--border-success); }
-        .message.error { background: var(--bg-error); color: var(--text-error); border: 1px solid var(--border-error); }
+        .btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(63, 60, 109, 0.4);
+        }
 
-        .screen { display: none; }
-        .screen.active { display: block; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        [data-theme="dark"] .btn-secondary {
+            background: #48484a;
+        }
+
+        .btn-secondary:active {
+            background: #4b5563;
+        }
+
+        .btn-load {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        [data-theme="dark"] .btn-load {
+            background: #0c7489;
+        }
+
+        .btn-load:active {
+            background: #138496;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--text-subtitle);
+        }
+
+        .auth-switch button {
+            background: none;
+            border: none;
+            color: var(--cor-principal);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .message.success {
+            background: var(--bg-success);
+            color: var(--text-success);
+            border: 1px solid var(--border-success);
+        }
+
+        .message.error {
+            background: var(--bg-error);
+            color: var(--text-error);
+            border: 1px solid var(--border-error);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         .loading::after {
-            content: ''; position: absolute; top: 50%; left: 50%; width: 16px; height: 16px;
-            margin: -8px 0 0 -8px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s linear infinite;
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- NOVO LAYOUT OFFLINE --- */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .offline-section {
-            margin-top: 35px;
+            margin-top: 30px;
             padding-top: 25px;
             border-top: 1px solid var(--border-input);
         }
-        
-        .offline-card {
-            background: var(--bg-input);
-            border: 2px solid var(--border-input);
-            border-radius: 18px;
-            padding: 24px 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .offline-card.is-ready {
-            background: var(--bg-success);
-            border-color: var(--border-success);
+
+        .online-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border-input);
         }
 
-        .offline-icon { font-size: 2.8rem; margin-bottom: 12px; line-height: 1; transition: transform 0.3s; }
-        .offline-card.is-ready .offline-icon { transform: scale(1.1); }
-        
-        .offline-title { color: var(--text-title); font-size: 1.15rem; font-weight: 700; margin: 0 0 8px 0; }
-        .offline-desc { color: var(--text-subtitle); font-size: 0.9rem; line-height: 1.45; margin: 0 0 20px 0; }
-        
-        .offline-card.is-ready .offline-title { color: var(--text-success); }
-        .offline-card.is-ready .offline-desc { color: var(--text-success); opacity: 0.9; }
+        .online-status {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-subtitle);
+            margin-top: 12px;
+            min-height: 18px;
+        }
+
+        .online-lista {
+            margin-top: 12px;
+        }
+
+        .online-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: var(--border-input);
+            margin-bottom: 8px;
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            flex: 0 0 auto;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+        }
+
+        .online-nome {
+            color: var(--text-title);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .online-vazio {
+            text-align: center;
+            color: var(--text-subtitle);
+            font-size: 0.85rem;
+            padding: 10px 0;
+        }
+
+        .online-permitir-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            font-size: 0.9rem;
+            color: var(--text-subtitle);
+            cursor: pointer;
+        }
+
+        .online-permitir-label input {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 auto;
+        }
+
+        .online-item .online-acao {
+            margin-left: auto;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2563eb;
+            background: rgba(37, 99, 235, 0.12);
+            padding: 5px 12px;
+            border-radius: 999px;
+        }
+
+        .online-item.online-pareado .online-acao {
+            color: #16a34a;
+            background: rgba(22, 163, 74, 0.14);
+        }
+
+        .online-pedido {
+            background: rgba(37, 99, 235, 0.08);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .online-pedido-texto {
+            color: var(--text-title);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .online-pedido-codigo {
+            color: var(--text-subtitle);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .online-pedido-botoes {
+            display: flex;
+            gap: 10px;
+        }
+
+        .online-btn-aceitar,
+        .online-btn-recusar {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .online-btn-aceitar {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .online-btn-recusar {
+            background: var(--border-input);
+            color: var(--text-title);
+        }
 
         .progress-bar-container {
-            width: 100%; height: 8px; background: var(--border-input); border-radius: 4px; overflow: hidden; margin: 16px 0; display: none;
+            width: 100%;
+            height: 6px;
+            background: var(--border-input);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+            display: none;
         }
-        .progress-bar-fill {
-            height: 100%; width: 0%; background: var(--cor-sucesso); transition: width 0.3s ease;
-        }
-        .progress-text { font-size: 0.85rem; color: var(--text-subtitle); text-align: center; margin-bottom: 16px; font-weight: 600; display: none; }
 
-        .btn-offline-action {
-            width: 100%; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 700; border: none; cursor: pointer;
-            transition: all 0.2s ease; background: var(--text-title); color: var(--bg-container); margin-bottom: 0;
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--cor-sucesso);
+            transition: width 0.2s ease;
         }
-        .btn-offline-action:active { transform: scale(0.97); }
-        
-        .btn-offline-danger {
-            width: 100%; padding: 12px; border-radius: 12px; font-size: 0.95rem; font-weight: 600;
-            border: 2px solid var(--cor-erro); background: transparent; color: var(--cor-erro); cursor: pointer;
-            display: none; transition: all 0.2s ease; margin-top: 12px;
+
+        .progress-text {
+            font-size: 0.8rem;
+            color: var(--text-subtitle);
+            text-align: center;
+            margin-bottom: 12px;
+            display: none;
         }
-        .btn-offline-danger:active { background: var(--bg-error); }
+
+        .btn-danger {
+            background: var(--cor-erro);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:active {
+            background: #dc2626;
+        }
     </style>
 </head>
 <body>
@@ -258,13 +527,24 @@
                     <label class="form-label" for="login-usuario">Nome de usuário</label>
                     <input type="text" id="login-usuario" class="form-input" placeholder="Digite seu nome de usuário" autocomplete="username">
                 </div>
+                
                 <div class="form-group">
                     <label class="form-label" for="login-senha">Senha</label>
                     <input type="password" id="login-senha" class="form-input" placeholder="Digite sua senha" autocomplete="current-password">
                 </div>
-                <button class="btn btn-primary" id="btn-login">Entrar</button>
-                <button class="btn btn-secondary" id="btn-voltar">Voltar sem Sincronizar</button>
-                <div class="auth-switch">Primeira vez aqui? <button id="switch-to-register">Criar conta</button></div>
+                
+                <button class="btn btn-primary" id="btn-login">
+                    Entrar
+                </button>
+                
+                <button class="btn btn-secondary" id="btn-voltar">
+                    Voltar sem Sincronizar
+                </button>
+                
+                <div class="auth-switch">
+                    Primeira vez aqui? 
+                    <button id="switch-to-register">Criar conta</button>
+                </div>
             </div>
 
             <div class="screen" id="register-screen">
@@ -272,17 +552,29 @@
                     <label class="form-label" for="register-usuario">Nome de usuário</label>
                     <input type="text" id="register-usuario" class="form-input" placeholder="Escolha um nome único" autocomplete="username">
                 </div>
+                
                 <div class="form-group">
                     <label class="form-label" for="register-senha">Senha</label>
                     <input type="password" id="register-senha" class="form-input" placeholder="Crie uma senha" autocomplete="new-password">
                 </div>
+                
                 <div class="form-group">
                     <label class="form-label" for="register-nome">Nome completo</label>
                     <input type="text" id="register-nome" class="form-input" placeholder="Como você gostaria de ser chamado?">
                 </div>
-                <button class="btn btn-primary" id="btn-register">Criar Conta</button>
-                <button class="btn btn-secondary" id="btn-voltar-register">Voltar sem Sincronizar</button>
-                <div class="auth-switch">Já tem uma conta? <button id="switch-to-login">Fazer login</button></div>
+                
+                <button class="btn btn-primary" id="btn-register">
+                    Criar Conta
+                </button>
+                
+                <button class="btn btn-secondary" id="btn-voltar-register">
+                    Voltar sem Sincronizar
+                </button>
+                
+                <div class="auth-switch">
+                    Já tem uma conta? 
+                    <button id="switch-to-login">Fazer login</button>
+                </div>
             </div>
 
             <div class="screen" id="logged-screen">
@@ -291,46 +583,91 @@
                     <h2 style="color: var(--text-title); margin-bottom: 10px;" id="logged-user-name">Usuário Logado</h2>
                     <p style="color: var(--text-subtitle); font-size: 0.9rem;" id="logged-user-info">Suas anotações estão sincronizadas</p>
                 </div>
-                <div class="message success">✅ Você já está logado e sincronizando suas anotações automaticamente</div>
-                <button class="btn btn-load" id="btn-carregar-conteudo">📥 Carregar Conteúdo Salvo</button>
-                <button class="btn btn-primary" id="btn-continuar-logged">Continuar</button>
-                <button class="btn btn-secondary" id="btn-logout">Fazer Logout</button>
+
+                <div class="message success">
+                    ✅ Você já está logado e sincronizando suas anotações automaticamente
+                </div>
+                
+                <button class="btn btn-load" id="btn-carregar-conteudo">
+                    📥 Carregar Conteúdo Salvo
+                </button>
+                
+                <button class="btn btn-primary" id="btn-continuar-logged">
+                    Continuar
+                </button>
+                
+                <button class="btn btn-secondary" id="btn-logout">
+                    Fazer Logout
+                </button>
             </div>
 
             <div class="screen" id="success-screen">
-                <div class="message success" id="success-message">Login realizado com sucesso!</div>
+                <div class="message success" id="success-message">
+                    Login realizado com sucesso!
+                </div>
+                
                 <div style="text-align: center; margin: 30px 0;">
                     <div style="font-size: 2rem; margin-bottom: 15px;">✅</div>
                     <h2 style="color: var(--text-title); margin-bottom: 10px;">Bem-vindo!</h2>
                     <p style="color: var(--text-subtitle);" id="welcome-text">Suas anotações estão sincronizadas</p>
                 </div>
-                <button class="btn btn-load" id="btn-carregar-sucesso">📥 Carregar Conteúdo Salvo</button>
-                <button class="btn btn-primary" id="btn-continuar">Continuar</button>
+                
+                <button class="btn btn-load" id="btn-carregar-sucesso">
+                    📥 Carregar Conteúdo Salvo
+                </button>
+                
+                <button class="btn btn-primary" id="btn-continuar">
+                    Continuar
+                </button>
             </div>
 
-            <div class="message error" id="error-message" style="display: none;"><span id="error-text"></span></div>
+            <div class="message error" id="error-message" style="display: none;">
+                <span id="error-text"></span>
+            </div>
 
-            <!-- NOVA SEÇÃO OFFLINE -->
             <div class="offline-section">
-                <div class="offline-card" id="offline-card">
-                    <div class="offline-icon" id="offline-icon">☁️</div>
-                    <h3 class="offline-title" id="offline-title">Modo Offline</h3>
-                    <p class="offline-desc" id="offline-desc">A Bíblia e a Sentinela da semana estarão com você, sem internet.</p>
-                    
-                    <div class="progress-bar-container" id="offline-progress-container">
-                        <div class="progress-bar-fill" id="offline-progress-fill"></div>
-                    </div>
-                    <div class="progress-text" id="offline-progress-text">0%</div>
-
-                    <button class="btn-offline-action" id="btn-offline-toggle">Baixar App para Offline</button>
-                    <button class="btn-offline-danger" id="btn-offline-clear">Apagar dados offline</button>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 1.8rem; margin-bottom: 5px;">✈️</div>
+                    <h3 style="color: var(--text-title); margin: 0; font-size: 1.1rem;">Modo Offline</h3>
+                    <p style="color: var(--text-subtitle); font-size: 0.85rem; margin-top: 5px;">Baixe a Bíblia, App e a Sentinela da semana para ler sem internet.</p>
                 </div>
+                
+                <div class="progress-bar-container" id="offline-progress-container">
+                    <div class="progress-bar-fill" id="offline-progress-fill"></div>
+                </div>
+                <div class="progress-text" id="offline-progress-text">0%</div>
+
+                <button class="btn btn-secondary" id="btn-offline-toggle">
+                    ⬇️ Baixar App para Modo Offline
+                </button>
+            </div>
+
+            <div class="online-section" id="online-section">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 1.8rem; margin-bottom: 5px;">📡</div>
+                    <h3 style="color: var(--text-title); margin: 0; font-size: 1.1rem;">Usuários Online</h3>
+                    <p style="color: var(--text-subtitle); font-size: 0.85rem; margin-top: 5px;">Veja quem mais está conectado neste momento.</p>
+                </div>
+
+                <button class="btn btn-secondary" id="btn-online-toggle">
+                    🔌 Ver usuários online
+                </button>
+
+                <label class="online-permitir-label">
+                    <input type="checkbox" id="online-permitir">
+                    <span>Permitir que outros se conectem comigo</span>
+                </label>
+
+                <div class="online-status" id="online-status"></div>
+                <div class="online-lista" id="online-lista"></div>
             </div>
 
         </div>
     </div>
 
-    <div class="sync-status-badge" id="sync-status-badge"><span id="sync-status-text">Não logado</span></div>
+    <div class="sync-status-badge" id="sync-status-badge">
+        <span id="sync-status-text">Não logado</span>
+    </div>
 
     <script src="config.js"></script>
     <script src="supabase.js"></script>
@@ -338,6 +675,7 @@
     <script src="../navbar/navbar-unified.js"></script>
     <script src="../navbar/network-sensor.js"></script>
     <script src="offline-manager.js"></script>
+    <script src="conexao.js"></script>
     
     <script>
         class AuthUI {
@@ -379,7 +717,9 @@
                         .single();
                     
                     if (error) {
-                        if (error.code === 'PGRST301' || error.message.includes('network') || error.message.includes('fetch')) return;
+                        if (error.code === 'PGRST301' || error.message.includes('network') || error.message.includes('fetch')) {
+                            return;
+                        }
                         if (error.code === 'PGRST116') {
                             localStorage.removeItem('supabase_user');
                             this.checkExistingLogin();
@@ -404,6 +744,7 @@
                     localStorage.removeItem('supabase_user');
                     localStorage.removeItem('last_login');
                     this.showStatusBadge('👋 Logout realizado', 'logged-out');
+                    
                     setTimeout(() => {
                         this.showScreen('login');
                         document.getElementById('login-usuario').value = '';
@@ -449,7 +790,6 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const semana = urlParams.get('semana');
                 if (semana) return semana;
-                if (typeof window.getGlobalWeek === 'function') return window.getGlobalWeek();
                 
                 const hoje = new Date();
                 const dia = hoje.getDay();
@@ -465,8 +805,11 @@
                 if (!this.statusBadge) return;
                 document.getElementById('sync-status-text').textContent = message;
                 this.statusBadge.classList.remove('logged-out', 'show');
-                if (type === 'success' || type === 'loading') this.statusBadge.classList.add('show');
-                else if (type === 'logged-out') this.statusBadge.classList.add('logged-out');
+                if (type === 'success' || type === 'loading') {
+                    this.statusBadge.classList.add('show');
+                } else if (type === 'logged-out') {
+                    this.statusBadge.classList.add('logged-out');
+                }
             }
 
             setupEventListeners() {
@@ -495,7 +838,7 @@
             }
 
             async handleLogin() {
-                if (document.body.classList.contains('is-offline')) {
+                if (!navigator.onLine) {
                     this.showError('Sem conexão com a internet.');
                     return;
                 }
@@ -512,8 +855,12 @@
                     const result = await window.SupabaseSync.logarUsuario(usuario, senha);
                     if (result.success) {
                         this.showSuccess(`Bem-vindo, ${result.userData.nome_completo || usuario}!`);
-                        if (window.UnifiedNavbar && window.UnifiedNavbar.get()) window.UnifiedNavbar.get().onLoginSuccess(result.userData);
-                        setTimeout(() => { if (window.SyncBridge) window.SyncBridge.forceLoadAllPages(); }, 1000);
+                        if (window.UnifiedNavbar && window.UnifiedNavbar.get()) {
+                            window.UnifiedNavbar.get().onLoginSuccess(result.userData);
+                        }
+                        setTimeout(() => {
+                            if (window.SyncBridge) window.SyncBridge.forceLoadAllPages();
+                        }, 1000);
                     } else {
                         this.showError(result.error);
                     }
@@ -526,7 +873,7 @@
             }
 
             async handleRegister() {
-                if (document.body.classList.contains('is-offline')) {
+                if (!navigator.onLine) {
                     this.showError('Sem conexão com a internet.');
                     return;
                 }
@@ -546,7 +893,9 @@
                         const loginResult = await window.SupabaseSync.logarUsuario(usuario, senha);
                         if (loginResult.success) {
                             this.showSuccess(`Conta criada! Bem-vindo, ${nome || usuario}!`);
-                            if (window.UnifiedNavbar && window.UnifiedNavbar.get()) window.UnifiedNavbar.get().onLoginSuccess(loginResult.userData);
+                            if (window.UnifiedNavbar && window.UnifiedNavbar.get()) {
+                                window.UnifiedNavbar.get().onLoginSuccess(loginResult.userData);
+                            }
                         }
                     } else {
                         this.showError(result.error);
@@ -563,7 +912,7 @@
                 document.querySelectorAll('.form-input').forEach(i => i.classList.remove('error', 'success'));
                 let valid = true;
                 if (!usuario || usuario.length < 3) {
-                    this.showError('Nome deve ter pelo menos 3 caracteres');
+                    this.showError('Nome de usuário deve ter pelo menos 3 caracteres');
                     document.getElementById(this.currentScreen + '-usuario').classList.add('error');
                     valid = false;
                 }
@@ -614,7 +963,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             new AuthUI();
             setTimeout(() => {
-                if (window.UnifiedNavbar && window.UnifiedNavbar.get()) window.UnifiedNavbar.setActivePage('save');
+                if (window.UnifiedNavbar && window.UnifiedNavbar.get()) {
+                    window.UnifiedNavbar.setActivePage('save');
+                }
             }, 200);
         });
     </script>

@@ -354,4 +354,17 @@ html[data-theme="dark"] #modal-biblia-add.is-active { border-color: #7db2ff; bac
 html[data-theme="dark"] #modal-biblia-campo { border-color: #3a3a3c; background: #2c2c2e; color: #f2f2f7; }
 html[data-theme="dark"] #modal-biblia-campo:focus { border-color: #7db2ff; background: #1c1c1e; }
 html[data-theme="dark"] #modal-biblia-campo::placeholder { color: #8e8e93; }
-html[data-theme="dark"] html[data-theme="dark"] 
+
+.toggle-title .bbl.versiculo-ref-toggle,
+.toggle-title .versiculo-ref-toggle {
+  color: #007AFF !important;
+  font-weight: 700 !important;
+}
+.editor.is-read-only .toggle-title .bbl.versiculo-ref-toggle {
+  color: #007AFF !important;
+}
+html[data-theme="dark"] .toggle-title .bbl.versiculo-ref-toggle,
+html[data-theme="dark"] .toggle-title .versiculo-ref-toggle,
+html[data-theme="dark"] .editor.is-read-only .toggle-title .bbl.versiculo-ref-toggle {
+  color: #0A84FF !important;
+}

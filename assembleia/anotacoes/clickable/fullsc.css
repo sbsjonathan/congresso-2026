@@ -274,3 +274,99 @@ body.fullsc-busy .fullsc-status { pointer-events: auto; }
 [data-theme="dark"] .fullsc-app .editor .toggle-arrow::before {
   border-left-color: color-mix(in srgb, var(--cor-global, #2a7d7d) 78%, #f2f2f7 22%);
 }
+
+#modal-biblia-add {
+  position: absolute;
+  top: calc(14px * var(--font-scale-global));
+  right: calc(82px * var(--font-scale-global));
+  width: calc(26px * var(--font-scale-global));
+  height: calc(26px * var(--font-scale-global));
+  border-radius: 50%;
+  border: 2px solid #aaa;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: bold;
+  font-size: calc(20px * var(--font-scale-global));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 0;
+}
+#modal-biblia-add:active { transform: scale(0.9); background: rgba(0,0,0,0.05); }
+#modal-biblia-add.is-active {
+  border-color: #6c66b8;
+  color: #fff;
+  background: #6c66b8;
+  transform: rotate(45deg);
+}
+#modal-biblia-acrescimo {
+  display: none;
+  margin-bottom: calc(16px * var(--font-scale-global));
+  margin-right: calc(120px * var(--font-scale-global));
+  gap: 8px;
+  align-items: stretch;
+}
+#modal-biblia-acrescimo.is-open { display: flex; }
+#modal-biblia-passo {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#modal-biblia-mais,
+#modal-biblia-menos {
+  width: 40px;
+  flex: 1;
+  min-height: 0;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: #374151;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#modal-biblia-mais:active,
+#modal-biblia-menos:active { transform: scale(0.9); background: #f3f4f6; }
+html[data-theme="dark"] #modal-biblia-mais,
+html[data-theme="dark"] #modal-biblia-menos {
+  border-color: #48484a;
+  background: #2c2c2e;
+  color: #f2f2f7;
+}
+html[data-theme="dark"] #modal-biblia-mais:active,
+html[data-theme="dark"] #modal-biblia-menos:active { background: #3a3a3c; }
+#modal-biblia-campo {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: 'Noto Sans', -apple-system, sans-serif;
+  background: #fafafa;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+#modal-biblia-campo:focus { border-color: #6c66b8; background: #fff; }
+#modal-biblia-campo::placeholder { color: #9ca3af; }
+html[data-theme="dark"] #modal-biblia-add { border-color: #666; color: #888; }
+html[data-theme="dark"] #modal-biblia-add.is-active { border-color: #7db2ff; background: #7db2ff; color: #1c1c1e; }
+html[data-theme="dark"] #modal-biblia-campo { border-color: #3a3a3c; background: #2c2c2e; color: #f2f2f7; }
+html[data-theme="dark"] #modal-biblia-campo:focus { border-color: #7db2ff; background: #1c1c1e; }
+html[data-theme="dark"] #modal-biblia-campo::placeholder { color: #8e8e93; }
+html[data-theme="dark"] html[data-theme="dark"] 

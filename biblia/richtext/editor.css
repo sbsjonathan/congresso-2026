@@ -172,10 +172,10 @@ body.zombie-toolbar-active .editor-scroll {
 
 .versiculo-ref { color: #007AFF; font-weight: 700; }
 [data-theme="dark"] .versiculo-ref { color: #0A84FF; }
-.versiculo-ref-toggle,
-.toggle-title .versiculo-ref-toggle { color: #007AFF; font-weight: 700; }
-[data-theme="dark"] .versiculo-ref-toggle,
-[data-theme="dark"] .toggle-title .versiculo-ref-toggle { color: #0A84FF; font-weight: 700; }
+.editor:not(.is-read-only) .toggle-title .bbl,
+.editor:not(.is-read-only) .toggle-title .versiculo-ref-toggle { color: #007AFF; font-weight: 700; }
+[data-theme="dark"] .editor:not(.is-read-only) .toggle-title .bbl,
+[data-theme="dark"] .editor:not(.is-read-only) .toggle-title .versiculo-ref-toggle { color: #0A84FF; font-weight: 700; }
 .shake { animation: shake .4s cubic-bezier(.36,.07,.19,.97) both; }
 
 @keyframes shake {

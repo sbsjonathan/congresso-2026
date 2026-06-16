@@ -582,15 +582,17 @@
     if (!toggleNode) return null;
     if (typeof M5_Factory === 'undefined' || typeof M2_Query === 'undefined') return null;
 
-    const refHTML = `<b class="versiculo-ref-toggle">${refCanonica}</b>`;
+    const refHTML = `<span class="bbl versiculo-ref-toggle">${refCanonica}</span>`;
     const linkNoTitulo = toggleTitle.querySelector('.bbl') || toggleTitle.querySelector('.versiculo-ref-toggle');
     if (linkNoTitulo) {
       const span = document.createElement('span');
       span.innerHTML = refHTML;
       const novoLink = span.firstChild;
       linkNoTitulo.replaceWith(novoLink);
+      if (typeof normalizeBblLinks === 'function') normalizeBblLinks(toggleTitle);
     } else {
       toggleTitle.innerHTML = toggleTitle.innerHTML + ' ' + refHTML;
+      if (typeof normalizeBblLinks === 'function') normalizeBblLinks(toggleTitle);
     }
     if (typeof M3_TextModel !== 'undefined') M3_TextModel.sync(toggleTitle);
 
